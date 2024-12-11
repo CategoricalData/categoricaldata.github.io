@@ -1,0 +1,20 @@
+<html><head>
+<link rel="stylesheet" href="../css/nstyle.css"></head><h1>transform subseteq</h1>
+<pre>
+typeside t
+schema s1 : t
+schema s2 : t
+query q1 : s1 -&gt; s2
+query q2 : s1 -&gt; s2
+----------------------------------
+transform (subseteq q1 q2) : frozen q1 Q -&gt; frozen q2 Q
+	</pre>
+Finds a morphism from one query to another, if possible.
+<br/><br/>Appears in:<br/><br/><br/>Options:<br/><br/><a href="always_reload.html" target="primary">always_reload</a>
+<br/>
+<a href="num_threads.html" target="primary">num_threads</a>
+<br/>
+<a href="talg_reduction.html" target="primary">talg_reduction</a>
+<br/>
+<a href="timeout.html" target="primary">timeout</a>
+</html>

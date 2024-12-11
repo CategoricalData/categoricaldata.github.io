@@ -1,5 +1,5 @@
 <html><head>
-<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example JDBCSQL</h1><pre>
+<link rel="stylesheet" href="../css/nstyle.css"></head><body><h1>example JDBCSQL</h1><pre>
 options
 	jdbc_quote_char = "" 
 	always_reload = true 
@@ -323,44 +323,25 @@ END
 
 create view ViewDepartment as   select concat(concat('(d=', concat(cast(d.id as varchar(256)), ')')), concat('(unfold1=', concat(cast(unfold1.id as varchar(256)), ')'))) as id, d.name as name, concat(concat(concat('(e=', concat(cast(cast(unfold1.id as varchar(256)) as varchar(256)), ')')), concat('(unfold0=', concat(cast(cast(unfold1.manager as varchar(256)) as varchar(256)), ')'))), concat('(unfold2=', concat(cast(cast(unfold1.worksIn as varchar(256)) as varchar(256)), ')'))) as secretary
 from ExportedDepartment as d, ExportedEmployee as unfold1
- 
+  where unfold1.id = d.secretary
 
 drop view if exists ViewEmployee
 
 create view ViewEmployee as   select concat(concat(concat('(e=', concat(cast(e.id as varchar(256)), ')')), concat('(unfold0=', concat(cast(unfold0.id as varchar(256)), ')'))), concat('(unfold2=', concat(cast(unfold2.id as varchar(256)), ')'))) as id, unfold0.first as first, unfold2.name as last, e.age as age, concat(concat(concat('(e=', concat(cast(cast(unfold0.id as varchar(256)) as varchar(256)), ')')), concat('(unfold0=', concat(cast(cast(unfold0.manager as varchar(256)) as varchar(256)), ')'))), concat('(unfold2=', concat(cast(cast(unfold0.worksIn as varchar(256)) as varchar(256)), ')'))) as manager, concat(concat('(d=', concat(cast(cast(unfold2.id as varchar(256)) as varchar(256)), ')')), concat('(unfold1=', concat(cast(cast(unfold2.secretary as varchar(256)) as varchar(256)), ')'))) as worksIn
 from ExportedEmployee as e, ExportedEmployee as unfold0, ExportedDepartment as unfold2
- </pre><hr/><h3>command view_view</h3><pre>START
+  where unfold0.id = e.manager and unfold2.id = e.worksIn</pre><hr/><h3>command view_view</h3><pre>START
 SELECT * FROM ViewEmployee
 
 ID (e=100)(unfold0=100)(unfold2=103),  FIRST Andrey,  LAST Applied Math,  AGE 103,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
-ID (e=100)(unfold0=100)(unfold2=104),  FIRST Andrey,  LAST Pure Math,  AGE 103,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
-ID (e=100)(unfold0=101)(unfold2=103),  FIRST Camille,  LAST Applied Math,  AGE 103,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=103)(unfold1=102)
-ID (e=100)(unfold0=101)(unfold2=104),  FIRST Camille,  LAST Pure Math,  AGE 103,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=104)(unfold1=101)
-ID (e=100)(unfold0=102)(unfold2=103),  FIRST Alan,  LAST Applied Math,  AGE 103,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
-ID (e=100)(unfold0=102)(unfold2=104),  FIRST Alan,  LAST Pure Math,  AGE 103,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
-ID (e=101)(unfold0=100)(unfold2=103),  FIRST Andrey,  LAST Applied Math,  AGE 102,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
-ID (e=101)(unfold0=100)(unfold2=104),  FIRST Andrey,  LAST Pure Math,  AGE 102,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
-ID (e=101)(unfold0=101)(unfold2=103),  FIRST Camille,  LAST Applied Math,  AGE 102,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=103)(unfold1=102)
 ID (e=101)(unfold0=101)(unfold2=104),  FIRST Camille,  LAST Pure Math,  AGE 102,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=104)(unfold1=101)
-ID (e=101)(unfold0=102)(unfold2=103),  FIRST Alan,  LAST Applied Math,  AGE 102,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
-ID (e=101)(unfold0=102)(unfold2=104),  FIRST Alan,  LAST Pure Math,  AGE 102,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
 ID (e=102)(unfold0=100)(unfold2=103),  FIRST Andrey,  LAST Applied Math,  AGE 101,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
-ID (e=102)(unfold0=100)(unfold2=104),  FIRST Andrey,  LAST Pure Math,  AGE 101,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
-ID (e=102)(unfold0=101)(unfold2=103),  FIRST Camille,  LAST Applied Math,  AGE 101,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=103)(unfold1=102)
-ID (e=102)(unfold0=101)(unfold2=104),  FIRST Camille,  LAST Pure Math,  AGE 101,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=104)(unfold1=101)
-ID (e=102)(unfold0=102)(unfold2=103),  FIRST Alan,  LAST Applied Math,  AGE 101,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
-ID (e=102)(unfold0=102)(unfold2=104),  FIRST Alan,  LAST Pure Math,  AGE 101,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
 END
 
 START
 SELECT * FROM ViewDepartment
 
-ID (d=103)(unfold1=100),  NAME Applied Math,  SECRETARY (e=100)(unfold0=100)(unfold2=103)
-ID (d=103)(unfold1=101),  NAME Applied Math,  SECRETARY (e=101)(unfold0=101)(unfold2=104)
 ID (d=103)(unfold1=102),  NAME Applied Math,  SECRETARY (e=102)(unfold0=100)(unfold2=103)
-ID (d=104)(unfold1=100),  NAME Pure Math,  SECRETARY (e=100)(unfold0=100)(unfold2=103)
 ID (d=104)(unfold1=101),  NAME Pure Math,  SECRETARY (e=101)(unfold0=101)(unfold2=104)
-ID (d=104)(unfold1=102),  NAME Pure Math,  SECRETARY (e=102)(unfold0=100)(unfold2=103)
 END
 
 START

@@ -1,0 +1,20 @@
+<html><head>
+<link rel="stylesheet" href="../css/nstyle.css"></head><h1>query chase</h1>
+<pre>
+typeside t
+schema s1 : t
+schema s2 : t
+constraints c : s1
+query q : s1 -&gt; s2
+----------------------------------
+query (chase c q) : s1 -&gt; s2
+	</pre>
+Chase a query with constraints.
+<br/><br/>Appears in:<br/><br/><br/>Options:<br/><br/><a href="always_reload.html" target="primary">always_reload</a>
+<br/>
+<a href="num_threads.html" target="primary">num_threads</a>
+<br/>
+<a href="talg_reduction.html" target="primary">talg_reduction</a>
+<br/>
+<a href="timeout.html" target="primary">timeout</a>
+</html>

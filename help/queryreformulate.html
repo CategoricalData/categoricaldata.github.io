@@ -1,0 +1,20 @@
+<html><head>
+<link rel="stylesheet" href="../css/nstyle.css"></head><h1>query reformulate</h1>
+<pre>
+typeside t
+schema s1 : t
+schema s2 : t
+constraints c : s1
+query q : s1 -&gt; s2
+----------------------------------
+query (reformulate c q s2) : s1 -&gt; s2
+	</pre>
+Use chase and back-chase to reformulate a query away from one schema towards another.  The numerical index indicates which re-writing to use.  They are sorted by how much reformulation is done.
+<br/><br/>Appears in:<br/><br/><br/>Options:<br/><br/><a href="always_reload.html" target="primary">always_reload</a>
+<br/>
+<a href="num_threads.html" target="primary">num_threads</a>
+<br/>
+<a href="talg_reduction.html" target="primary">talg_reduction</a>
+<br/>
+<a href="timeout.html" target="primary">timeout</a>
+</html>
