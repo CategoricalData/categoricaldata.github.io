@@ -1,0 +1,123 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example vsSQL3</h1><pre>
+#Problem 3: Given this source table
+#
+#create table DeptEmp(deptId int not null, mgrName varchar(32), empId int not null)
+#
+#Populate these target tables
+#
+#create table Dept(deptId int not null, mgrId int not null, mgrName varchar(32))
+#
+#create table Emp(empId int not null, wrksIn int not null)
+#
+#Such that
+#
+#1) If (d,m,n) is in Dept, then (m,d) is in Emp
+#2) If (e,d) is in Emp, then (d,M,N) is in Dept for some M and N
+#3) If (d,n,e) is in DeptEmp, then (e,d) is in Emp and (d,M,n) is in Dept for some M
+#
+#Example input data:
+#
+#insert into DeptEmp(0, Alice, 1);
+
+
+typeside Ty = literal {
+	external_types
+		dom -&gt; "java.lang.Object"
+	external_parsers
+		dom -&gt; "x =&gt; x"
+}
+
+############################################################################
+
+schema S = literal : Ty {
+	entities
+		SDeptEmp
+	attributes
+		SdeptId : SDeptEmp -&gt; dom
+		SmgrName : SDeptEmp -&gt; dom
+		SempId : SDeptEmp -&gt; dom
+}
+
+schema T = literal : Ty {
+	entities
+		TDept TEmp
+	attributes
+		TempId : TEmp -&gt; dom
+		TwrksIn : TEmp -&gt; dom
+		TdeptId : TDept -&gt; dom
+		TmgrId : TDept -&gt; dom
+		TmgrName : TDept -&gt; dom
+}
+
+schema ST = literal : Ty {
+	imports
+		S T
+}
+
+#all EDs are expressed on the combined schema ST.
+constraints theEDs = literal : ST {
+	#managers work in the departments they manage (stronger than FK)
+	#Dept(d,m,n) -&gt; Emp(m,d)
+	forall d:TDept -&gt;
+ 	exists e:TEmp
+ 	where d.TdeptId = e.TwrksIn  d.TmgrId = e.TempId
+
+	#every employee works in some department (FK)
+	#Emp(e,d) -&gt; exists M,N. Dept(d,M,N)
+ 	forall e:TEmp -&gt;
+	exists d:TDept
+ 	where d.TdeptId = e.TwrksIn
+
+	#every DeptEmp is a department and an employee
+	#DeptEmp(d,n,e) -&gt; exists M. Dept(d, M, n) , Emp(e, d)
+	forall de:SDeptEmp -&gt;
+	exists d:TDept e:TEmp
+ 	where de.SdeptId = d.TdeptId d.TdeptId = e.TwrksIn de.SdeptId = d.TdeptId de.SempId = e.TempId
+}
+
+####################################/
+
+#test instance (on ST) DeptEmp(cs, alice, 1)
+instance I = literal : ST {
+	generators
+		de:SDeptEmp
+	equations
+		de.SdeptId = cs de.SmgrName = alice de.SempId = "1"
+}
+
+instance J = chase theEDs I
+
+command JisOk1 = check theEDs J #verify the chased instance satisfies the EDs
+
+#command InotOk = check theEDs I #the input instance does not satisfy the EDs
+
+
+################################################################################
+
+schema s = front theEDs 2
+
+query Q1 = front theEDs 2
+query Q2 = back theEDs 2
+
+instance J1 = eval Q1 J
+instance J2 = eval Q2 J
+instance j1 = except J1 J2 #no difference after chasing
+
+instance I1 = eval Q1 I
+instance I2 = eval Q2 I
+instance i1 = except I1 I2 #was different originally
+</pre> Keywords:<br/></br>			<a href="typesidetypeside_literal.html" >typeside_literal</a><br />
+			<a href="instanceexcept.html" >except</a><br />
+			<a href="instanceeval.html" >eval</a><br />
+			<a href="schemaschema_literal.html" >schema_literal</a><br />
+			<a href="constraintsconstraints_literal.html" >constraints_literal</a><br />
+			<a href="instancechase.html" >chase</a><br />
+			<a href="instanceinstance_literal.html" >instance_literal</a><br />
+			<a href="queryback.html" >back</a><br />
+			<a href="schemafront.html" >front</a><br />
+			<a href="commandcheck.html" >check</a><br />
+<br/>Options:<br/></br><a href="simple_query_entity.html" >simple_query_entity</a><br/>
+
+<br/></br>
+<hr/><h3>instance I</h3><div><table id="table671" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>SDeptEmp</b></caption><tr><th onclick="sortTable('table671', 0)">ID</th><th onclick="sortTable('table671', 1)">SdeptId</th><th onclick="sortTable('table671', 2)">SmgrName</th><th onclick="sortTable('table671', 3)">SempId</th></tr><tr><td>0</td><td>cs</td><td>alice</td><td>1</td></tr></table><table id="table672" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>TDept</b></caption><tr><th onclick="sortTable('table672', 0)">ID</th><th onclick="sortTable('table672', 1)">TdeptId</th><th onclick="sortTable('table672', 2)">TmgrId</th><th onclick="sortTable('table672', 3)">TmgrName</th></tr></table><table id="table673" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>TEmp</b></caption><tr><th onclick="sortTable('table673', 0)">ID</th><th onclick="sortTable('table673', 1)">TempId</th><th onclick="sortTable('table673', 2)">TwrksIn</th></tr></table></div><br style="clear:both;"/><hr/><h3>instance J</h3><div><table id="table674" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>SDeptEmp</b></caption><tr><th onclick="sortTable('table674', 0)">ID</th><th onclick="sortTable('table674', 1)">SdeptId</th><th onclick="sortTable('table674', 2)">SmgrName</th><th onclick="sortTable('table674', 3)">SempId</th></tr><tr><td>0</td><td>cs</td><td>alice</td><td>1</td></tr></table><table id="table675" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>TDept</b></caption><tr><th onclick="sortTable('table675', 0)">ID</th><th onclick="sortTable('table675', 1)">TdeptId</th><th onclick="sortTable('table675', 2)">TmgrId</th><th onclick="sortTable('table675', 3)">TmgrName</th></tr><tr><td>1</td><td>cs</td><td>?0</td><td>?1</td></tr></table><table id="table676" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>TEmp</b></caption><tr><th onclick="sortTable('table676', 0)">ID</th><th onclick="sortTable('table676', 1)">TempId</th><th onclick="sortTable('table676', 2)">TwrksIn</th></tr><tr><td>2</td><td>?0</td><td>cs</td></tr><tr><td>3</td><td>1</td><td>cs</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance I2</h3><div><table id="table677" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Front</b></caption><tr><th onclick="sortTable('table677', 0)">ID</th><th onclick="sortTable('table677', 1)">de_SmgrName</th><th onclick="sortTable('table677', 2)">de_SempId</th><th onclick="sortTable('table677', 3)">de_SdeptId</th></tr></table></div><br style="clear:both;"/><hr/><h3>instance J2</h3><div><table id="table678" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Front</b></caption><tr><th onclick="sortTable('table678', 0)">ID</th><th onclick="sortTable('table678', 1)">de_SmgrName</th><th onclick="sortTable('table678', 2)">de_SempId</th><th onclick="sortTable('table678', 3)">de_SdeptId</th></tr><tr><td>0</td><td>alice</td><td>1</td><td>cs</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance J1</h3><div><table id="table679" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Front</b></caption><tr><th onclick="sortTable('table679', 0)">ID</th><th onclick="sortTable('table679', 1)">de_SmgrName</th><th onclick="sortTable('table679', 2)">de_SempId</th><th onclick="sortTable('table679', 3)">de_SdeptId</th></tr><tr><td>0</td><td>alice</td><td>1</td><td>cs</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance I1</h3><div><table id="table680" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Front</b></caption><tr><th onclick="sortTable('table680', 0)">ID</th><th onclick="sortTable('table680', 1)">de_SmgrName</th><th onclick="sortTable('table680', 2)">de_SempId</th><th onclick="sortTable('table680', 3)">de_SdeptId</th></tr><tr><td>0</td><td>alice</td><td>1</td><td>cs</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance j1</h3><div><table id="table681" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Front</b></caption><tr><th onclick="sortTable('table681', 0)">ID</th><th onclick="sortTable('table681', 1)">de_SmgrName</th><th onclick="sortTable('table681', 2)">de_SempId</th><th onclick="sortTable('table681', 3)">de_SdeptId</th></tr></table></div><br style="clear:both;"/><hr/><h3>instance i1</h3><div><table id="table682" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Front</b></caption><tr><th onclick="sortTable('table682', 0)">ID</th><th onclick="sortTable('table682', 1)">de_SmgrName</th><th onclick="sortTable('table682', 2)">de_SempId</th><th onclick="sortTable('table682', 3)">de_SdeptId</th></tr><tr><td>0</td><td>alice</td><td>1</td><td>cs</td></tr></table></div><br style="clear:both;"/><hr/><h3>command JisOk1</h3><pre>Satisfies</pre></body></html>

@@ -1,0 +1,25 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><h1>instance spanify</h1>
+<pre>
+schema s : rdf
+instance i : literal : rdf {
+	entities
+		R
+	attributes
+		object : R -&gt; Dom
+		predicate : R -&gt; Dom
+		subject : R -&gt; Dom}
+----------------------------------
+instance (spanify i) : schemaOf spanify i
+	</pre>
+Convert an RDF instance into spans without using OWL
+<br/><br/>Appears in:<br/><br/>
+<a href="JSON.html" target="primary">JSON</a><br />
+<a href="RDF Jena.html" target="primary">RDF Jena</a><br /><br/>Options:<br/><br/><a href="always_reload.html" target="primary">always_reload</a>
+<br/>
+<a href="num_threads.html" target="primary">num_threads</a>
+<br/>
+<a href="talg_reduction.html" target="primary">talg_reduction</a>
+<br/>
+<a href="timeout.html" target="primary">timeout</a>
+</html>

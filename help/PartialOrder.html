@@ -1,0 +1,32 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example PartialOrder</h1><pre>
+schema Rel = literal : empty {
+	entities 
+		Dom Row
+	foreign_keys 
+		p1 p2 : Row -&gt; Dom
+}
+
+constraints PartialOrder = literal : Rel {
+	forall d:Dom -&gt; exists r:Row where r.p1 = d r.p2 = d #refl
+	
+	forall r1 r2:Row where r1.p1 = r2.p2 r1.p2 = r2.p1 -&gt; where r1.p1 = r1.p2  #anti-sym
+	
+	forall r1 r2:Row where r1.p2 = r2.p1 -&gt; 
+	exists r3:Row where r3.p1 = r1.p1 r3.p2 = r2.p2 #trans
+}
+
+instance TwoGenerators = literal : Rel { 
+	generators 
+		0 1 : Dom 
+}
+
+#R(0,0) R(1,1)
+instance FreePartialOrderOnTwoGenerators = chase PartialOrder TwoGenerators
+</pre> Keywords:<br/></br>			<a href="instanceinstance_literal.html" >instance_literal</a><br />
+			<a href="constraintsconstraints_literal.html" >constraints_literal</a><br />
+			<a href="instancechase.html" >chase</a><br />
+			<a href="schemaschema_literal.html" >schema_literal</a><br />
+<br/>Options:<br/></br>
+<br/></br>
+<hr/><h3>instance TwoGenerators</h3><div><table id="table419" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Dom</b></caption><tr><th onclick="sortTable('table419', 0)">ID</th></tr><tr><td>0</td></tr><tr><td>1</td></tr></table><table id="table420" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Row</b></caption><tr><th onclick="sortTable('table420', 0)">ID</th><th onclick="sortTable('table420', 1)">p1</th><th onclick="sortTable('table420', 2)">p2</th></tr></table></div><br style="clear:both;"/><hr/><h3>instance FreePartialOrderOnTwoGenerators</h3><div><table id="table421" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Dom</b></caption><tr><th onclick="sortTable('table421', 0)">ID</th></tr><tr><td>0</td></tr><tr><td>1</td></tr></table><table id="table422" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Row</b></caption><tr><th onclick="sortTable('table422', 0)">ID</th><th onclick="sortTable('table422', 1)">p1</th><th onclick="sortTable('table422', 2)">p2</th></tr><tr><td>2</td><td>0</td><td>0</td></tr><tr><td>3</td><td>1</td><td>1</td></tr></table></div><br style="clear:both;"/></body></html>

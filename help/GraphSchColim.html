@@ -1,0 +1,28 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example GraphSchColim</h1><pre>
+graph span = literal {
+	nodes L X R
+	edges f : L -&gt; X   g : X -&gt; R
+}
+
+typeside T = empty
+schema S = empty : T
+mapping F = identity S
+
+schema_colimit C = literal span : T {
+	nodes
+		L -&gt; S
+		X -&gt; S
+		R -&gt; S
+	edges
+		f -&gt; F
+		g -&gt; F
+}
+</pre> Keywords:<br/></br>			<a href="schema_colimitschema_colimit_literal.html" >schema_colimit_literal</a><br />
+			<a href="typesideempty.html" >empty</a><br />
+			<a href="schemaempty.html" >empty</a><br />
+			<a href="graphgraph_literal.html" >graph_literal</a><br />
+			<a href="mappingmapping_identity.html" >mapping_identity</a><br />
+<br/>Options:<br/></br>
+<br/></br>
+</body></html>

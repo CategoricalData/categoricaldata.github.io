@@ -1,0 +1,62 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example Aggregation</h1><pre>
+#Aggregation is not functorial
+options
+	allow_aggregation_unsafe = true
+
+typeside Ty = literal {
+	external_types
+		Double -&gt; "java.lang.Double"
+	external_parsers
+		Double -&gt; "x =&gt; java.lang.Double.parseDouble(x)"
+	external_functions
+		plus : Double,Double -&gt; Double = "(x, y) =&gt; 0.0 + x + y"
+}
+
+schema S = literal : Ty {
+	entities
+		Emp Dept
+	foreign_keys
+		worksIn : Emp -&gt; Dept
+	attributes
+		salary : Emp -&gt; Double
+}
+
+schema T = literal : Ty {
+	entities
+		Dept
+	attributes
+		totalCost : Dept -&gt; Double
+}
+
+instance I = literal : S {
+	generators
+		p1 p2 p3 p4 : Emp
+		d1 d2 : Dept
+	equations
+		p1.salary = "10" #p2.salary = "1"
+		p1.worksIn = d1 p2.worksIn = d1
+
+		p3.salary = "50" #p2.salary = "1"
+		p3.worksIn = d2 p4.worksIn = d2
+
+}
+
+query Q1 = literal : S -&gt; T {
+	entity Dept -&gt; {from d:Dept
+  			attributes totalCost -&gt; from p:Emp
+				where worksIn(p) = d
+  	    		return salary(p)
+  	    		aggregate 0 lambda arg1 arg2. plus(arg1,arg2)
+	}
+}
+
+instance J = eval Q1 I
+</pre> Keywords:<br/></br>			<a href="schemaschema_literal.html" >schema_literal</a><br />
+			<a href="typesidetypeside_literal.html" >typeside_literal</a><br />
+			<a href="queryquery_literal.html" >query_literal</a><br />
+			<a href="instanceeval.html" >eval</a><br />
+			<a href="instanceinstance_literal.html" >instance_literal</a><br />
+<br/>Options:<br/></br>
+<br/></br>
+<hr/><h3>instance I</h3><div><table id="table0" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Dept</b></caption><tr><th onclick="sortTable('table0', 0)">ID</th></tr><tr><td>0</td></tr><tr><td>1</td></tr></table><table id="table1" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Emp</b></caption><tr><th onclick="sortTable('table1', 0)">ID</th><th onclick="sortTable('table1', 1)">salary</th><th onclick="sortTable('table1', 2)">worksIn</th></tr><tr><td>2</td><td>10.0</td><td>0</td></tr><tr><td>3</td><td>?0</td><td>0</td></tr><tr><td>4</td><td>50.0</td><td>1</td></tr><tr><td>5</td><td>?1</td><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance J</h3><div><table id="table2" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Dept</b></caption><tr><th onclick="sortTable('table2', 0)">ID</th><th onclick="sortTable('table2', 1)">totalCost</th></tr><tr><td>0</td><td>(10.0 plus ?0)</td></tr><tr><td>1</td><td>(50.0 plus ?1)</td></tr></table></div><br style="clear:both;"/></body></html>

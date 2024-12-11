@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Rule Finder</title>
+
+        <link rel = "stylesheet" href="styles.css?v=<?= filemtime('styles.css') ?>">
+
+        <style>
+            /* Set additional styling options for the columns*/
+            .column {
+            float: left;
+            width: 50%;
+            /* margin: 5px 5px; */
+            }
+        
+            .row:after {
+            content: "";
+            display: table;
+            clear: both;
+            }
+            </style>
+    </head>
+
+    <body>
+        <header> 
+            <script src="https://unpkg.com/node-sql-parser/umd/parser.min.js"></script>
+            <script src="scripts/main.js?v=<?= filemtime('main.js') ?>"></script>  
+            <!-- the php above following main.js path was just used to work around server caching during development. 
+                could be safely deleted once a stable version of main.js exists. but the time difference is negligible with such a small file.  -->
+        </header>  
+        <h1> Rule Finder </h1>
+        Enter schema definitions here, or 
+        <button type='button' onclick="autopop(); return false;"> autopopulate </button>
+        with schema definitions from the demo.
+        <form> 
+            <textarea id="inschema" style="margin: 0px 0px 10.546875px; width: 500px; height: 200px;"></textarea> <br>
+            <input type="checkbox" id="nullcheck" name="nullcheck" value='no' > 
+            <label for="nullcheck">  Allow null values in primary keys (by default, if a key contains a null value, it could not be reported as a primary key) </label>
+            <br>
+                
+            <select id="candCard" style = 'margin: 10px 0px'>
+                <option value=1>1</option>
+                <option value=2>2</option>
+            </select> 
+            <label for="candCard"> Number of columns to consider in combination to check for primary key </label>
+            <br>
+
+            <input type='submit' value="Submit" onclick='main(); return false;'/> <br> <br> 
+        </form>
+
+        
+        Run the script below on database.  <br>
+        <textarea id="outscript" style="margin: 0px 0px 10.546875px; width: 850px; height: 400px;"></textarea> <br>
+         <input type='submit' value="Download" onclick='download("outscript.sql", document.getElementById("outscript").value); return false;'/> <br> 
+
+
+        <h2> Demo </h2>
+        <h4> Setting up the Database </h4>
+        We will be walking through an example use case with a very simple database that has a departments table and a dept_manager table. 
+        To follow along with this demo in your own test database, download and run <a href="samples/sample.sql" download = 'sample.sql'>sample.sql</a> 
+        to setup the necessary tables and dump the data. <br>
+        At this point, perhaps query your database to check that your results mirror those below. 
+        
+        <div class="row">
+            <div class="column" style="">
+                <img src = "images/dept_table.png" style = "width:400px" >  <br>   
+                As we might expect, dept_no and dept_name are each primary keys for th departments table. 
+                More intestingly though, dept_manager.dept_no is a foreign key that references departments.dept_no.  
+                This is because 'departments.dept_no' is a primary key of the departments table, 
+                and for every value in dept_manager.dept_no, there exists a corresponding value in departments.dept_no.
+            </div>
+            <div class="column" style="">
+                <img src = "images/dm_table.png" style = "width:400px">  <br>
+                Firstly, note that because of that last row of null values, here are technically no primary keys. 
+                However, if weren't for that row, emp_no would in fact be a primary key. 
+                In order to still have our program report this, we may want to relax the technical constraint and allow emp_no to be reported as a primary-key.  
+                We will see how to configure the program to do just that. 
+            </div>
+        </div>
+
+        <br>
+
+
+
+    
+        <br> <br> 
+        <h4> Generating the Script  </h4>
+        <img src = 'images/script_gen.png' style = "width:400px" ALIGN = 'right'>
+        At this point we want to place our schema definitions into the first text box on this page.
+        Because it's what I'm using, I'll walk through the process for MySqlWorkbench, but of course, any other system works perfeclty fine. 
+        Via the top SERVER -> Data Export, select the tables that you want to check, and choose "dump structure only".
+        This will hand back a .sql file with the necessary information, the contents of which you can paste into the box.
+        <br> <br>
+        The important bits are included below. Note that in the tool at the top, clicking 'autopopulate' will automatically input these defintions into the text box. <br><br>
+        <p>
+        CREATE TABLE departments (  <br>
+        dept_no     CHAR(4)         NOT NULL, <br> 
+        dept_name   VARCHAR(40)     NOT NULL );
+        </p>
+        <p>
+        CREATE TABLE dept_manager (
+        emp_no       INT             NOT NULL,<br>
+        dept_no      CHAR(4)         NOT NULL,<br>
+        from_date    DATE            NOT NULL,<br>
+        to_date      DATE            NOT NULL ); <br>
+        </p>
+       
+        For the purpose of this demonstration, we will only check for simple primary keys (1 column).   
+        Remembering the row of nulls in dept_manager, we will choose to allow null values in our primary key check. 
+        After configuring these settings and submitting, your page should resemble the image to the right. 
+        <br CLEAR = 'right'>
+
+        <h4> Running the Rulefinder and Interpreting Results</h4>
+        Running the output script in your rdms workbench should produce 4 results for this example.
+        Below are a few of the relevant findings. <br>
+
+        <div class="row">
+            <div class="column">
+                <img src = "images/emp_no.png" style = "height:300px"> 
+            </div>
+            <div class="column" >
+                <img src = "images/reffer.png" style = "height:300px">  <br>
+            </div>
+        </div>
+
+    
+        As expected, emp_no was found to be a primary key of dept_manager, and dept_manager.dept_no a foreign key referencing departments.dept_no. <br>
+        
+        <h4> Reconfiguring and Rerunning</h4>
+        <p>
+           
+         <img src = "images/compound.png" style = "width:500px" ALIGN = 'right'>  
+         Now let's reconfigure the setting at the top of this page to check for candidate keys of size 2 (still allowing nulls in primary key checking).
+         Running this new script, you should see all the same results as before, and more. I encourage you to skim through all of the results, but one of
+         the newly produced ones is included below.    
+
+         <p>
+         This result says that together, to_date and from_date exactly specify a dept_manager. 
+        While a bit trickier to verify than emp_no, closely analyzing the table does reveal this to be true. 
+        </p> 
+        <p>
+        Note that while emp_no and to_date, do exactly a dept_manager, this is not reported as a 
+        primary key. This is because primary keys are defined to be minimal, meaning that if emp_no alone is a primary key, 
+        then emp_no + to_date is not.  </p>
+        This concludes the demo. You are ready to go out and try the tool with your own data!
+         <br CLEAR = 'right'>
+
+        <h2>  Theory  </h2>
+
+		<p>The rule finder makes use of SQL queries to check for primary and foreign keys.  For example, or each primary key k, we
+		generate two SQL queries, front(k) and back(k), whose difference indicates primary key violations.</p>
+
+        <p>For example, if our attributes are name and age and k = name, then front(k) and back(k) are: <br>
+        SELECT * FROM persons AS A, persons AS B WHERE A.name = B.name  <br> 
+         
+        SELECT * FROM persons AS A, persons AS B WHERE A.name = B.name AND A.age = B.age  <br>
+        </p>
+       <!-- <p>
+        This primary key definition also specifies that no null value can exist in the key. However, we did give the option to ignore this technical constraint in the program. If you had a row of nulls in your table, for example, no primary key would exist for that table. However, with the setting to allow null values in the primary keys, our program might find one. <br>
+        </p> -->
+<!--        <p>
+        This case of considering single column primary keys is simple enough. The complexity increases when we consider primary keys composed of even two columns. Ignoring the exponential rate at which the search space grows, we also must keep track of the simple primary keys that we have already identified. This is because primary keys are by definition minimal. That is, if name is a primary key for table persons, then name + id is not a primary key, even if it also uniquely identifies the person.<br> 
+        </p> -->
+      <!--  <p>
+        For a foreign key check, we first must check that the candidate key is in fact a primary key of the parent table. Then, the additional constraint is that for every value of the foreign key in the child table, there is a corresponding value in the candidate key of the parent table. 
+        <br>
+-->
+
+        <h4> Limitations </h4>
+        <!--Schema definitions and sample data borrowed from 
+        <a href='https://github.com/datacharmer/test_db'>datacharmer's sample database.</a> <br> 
+        Under creative commons public domain license (attrribution not needed)
+        -->
+        Only mysql is supported, and only the following types are supported: <br>   
+        "BIGINT", "CHAR", "DATE", "DECIMAL", "INT", "INTEGER", "JSON", "LONGTEXT", "MEDIUMTEXT", "NUMERIC", "SMALLINT", "TEXT", "TIME", "TIMESTAMP", "TINYINT", "TINYTEXT", "VARCHAR"
+        <br>
+
+
+
+        <!-- <script> 
+            function autopop() { 
+                var insc = document.getElementById('textArea'); 
+                var defaultSchema = `CREATE TABLE departments ( dept_no CHAR(4) NOT NULL, dept_name VARCHAR(40) NOT NULL ); 
+                CREATE TABLE dept_manager ( emp_no INT NOT NULL, dept_no CHAR(4) NOT NULL, from_date DATE NOT NULL, to_date DATE NOT NULL );`
+                insc.value = defaultSchema;
+            }
+        </script> -->
+    </body>
+
+</html>

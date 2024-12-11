@@ -1,91 +1,96 @@
-<!DOCTYPE html>
-<html lang="en-US">
-  <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+<!DOCTYPE HTML>
+<html  lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CD4ENCFV58"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-64DRFX06T1"></script>
+<script >
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
 
-<!-- Begin Jekyll SEO tag v2.5.0 -->
-<title>Categorical Query Language | CQL</title>
-<meta name="generator" content="Jekyll v3.7.4" />
-<meta property="og:title" content="Categorical Query Language" />
-<meta property="og:locale" content="en_US" />
-<meta name="description" content="Categorical Query Language IDE" />
-<meta property="og:description" content="Categorical Query Language IDE" />
-<link rel="canonical" href="http://categoricaldata.github.io/CQL/" />
-<meta property="og:url" content="http://categoricaldata.github.io/CQL/" />
-<meta property="og:site_name" content="CQL" />
-<script type="application/ld+json">
-{"@type":"WebSite","url":"http://categoricaldata.github.io/CQL/","publisher":{"@type":"Organization","logo":{"@type":"ImageObject","url":"http://categoricaldata.net/logo.png"}},"name":"CQL","headline":"Categorical Query Language","description":"Categorical Query Language IDE","@context":"http://schema.org"}</script>
-<!-- End Jekyll SEO tag -->
+  gtag('config', 'G-64DRFX06T1');
+</script>
+<title>CQL</title>
+<link rel="shortcut icon" href="../favicon.ico" >
+<link rel="StyleSheet" href="css/nstyle.css" type="text/css" media="all" > 
+<meta charset="utf-8">
+<meta name="keywords" content="CQL,SQL,Data Integration, Data Migration, Category Theory, ETL" >
+<meta name="description" content="Conexus CQL" >
+<meta name="keywords" content="CQL, functorial, category theory, data integration, data migration, categorical databases, SQL, categorical query language" >
+</head>
+<body>
+<div id="content">
+<h1>Categorical Databases<img src="logo.png" height="32" style="float: right;" alt="logo" ></h1>
+<a href="https://categoricaldata.net">Home</a> | 
+<a href="download.html">Download</a> | 
+<a href="examples.html">Getting Started</a> | 
+<a href="help/index.html" target="_blank">Manual</a> |
+<a href="https://github.com/CategoricalData/CQL/wiki" target="_blank">Wiki</a> |
+<a href="papers.html">Papers</a> |
+<a href="screens.html">Screen Shots</a> |
+<a href="https://github.com/categoricalData" target="_blank">Github</a> |
+<a href="https://groups.google.com/forum/#!forum/categoricaldata" target="_blank">Google Group</a> |
+<a href="https://conexus.com" target="_blank">Conexus</a> |
+<a href="mailto:info@conexus.com">Contact</a> 
+<br><br>
+<hr>
+<h2>A principled way to transform data</h2> 
 
-    <link rel="stylesheet" href="css/nstyle.css">
-    <!--[if lt IE 9]>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/html5shiv/3.7.3/html5shiv.min.js"></script>
-    <![endif]-->
-  </head>
-  <body>
-    <div class="wrapper">
-      <header>
-        <h1><a href="http://categoricaldata.github.io/CQL/" target="_blank">CQL</a></h1>
-        
-        <img src="http://categoricaldata.net/logo.png" alt="Logo" height="32" />
-      
-        <p>Categorical Query Language IDE</p>
-        
-        <p class="view"><a href="http://github.com/CategoricalData/CQL" target="_blank">View the Project on GitHub <small>CategoricalData/CQL</small></a></p>
-        
-   </header>
-      <section>
+<p>
+Open-source CQL and its integrated development environment (IDE) performs data-related tasks &mdash; such as querying, combining, migrating, and evolving databases &mdash; using <a href="https://en.wikipedia.org/wiki/Applied_category_theory">category theory</a>, a branch of mathematics that has revolutionized several areas of computer science.  Open-source CQL is production-ready for single-node in-memory data processing workloads, such as <a href="http://arxiv.org/abs/1903.10579">integrating data for data science</a>.  It is being commercialized by <a href="https://conexus.com">Conexus AI</a>; for inquiries, contact <a href="https://wisnesky.net">Ryan Wisnesky</a>. 
+</p><table>
+<tr>
+	<td><a href="images/shot1.png"><img src="images/shot1.png" alt="A CQL schema mapping" height="132" width="189" ></a>
+</td>
 
-      <h1 id="categorical-query-language">Categorical Query Language</h1>
+	<td><a href="images/shot1old2.png"><img src="images/shot1old2.png" alt="A CQL schema" height="132" width="189" ></a>
+	</td>
+	
+	<td><a href="images/shot3.png"><img src="images/shot3.png" alt="A CQL database" height="132" width="189" ></a>
+	</td>
+	
+	<td><a href="images/shot4.png"><img src="images/shot4.png" alt="A CQL E/R diagram" height="132" width="189" ></a>
+	</td> 
+	
+</tr>	
+</table>
 
-<p>For more information, please see:</p>
-<ul>
-  <li><a href="http://categoricaldata.net" target="_blank">Community page</a></li>
-<!--  <li><a href="http://cql.conexus.ai/" target="_blank">Commercial page</a></li>-->
-  <li><a href="http://github.com/CategoricalData/CQL/wiki" target="_blank">Wiki</a></li>
-  <li><a href="http://categoricaldata.net/help/index.html" target="_blank">Manual</a></li>
-</ul>
+<h2>Value Proposition</h2> 
 
-<h3 id="pre-built-binary">Pre-built Binary</h3>
+	<ul>
+	
+	<li><b>Reduce risk of failure through artificial intelligence</b>.  CQL contains an embedded automated theorem prover that guarantees the correctness of CQL programs.  For example, <a href="fk.html">a CQL program cannot materialize an instance that violates a data integrity constraint</a>.  Such errors are detected at compile time, when they are easiest to fix. </li>
+	
+	<li><b>Preserve data quality</b>. High-quality data is expensive to obtain, so it is important to preserve that quality throughout the data life-cycle. CQL programs evolve and migrate data in a mathematically universal way, with zero degradation. As such, data integrated by CQL has many advantages, including perfect provenance: <a href="joinless.html">every row in the output of an CQL program contains a lineage that describes exactly how that row was obtained from input data</a>.</li>
+	
+	<li><b>Increased developer productivity through higher-level abstractions</b>.  CQL generalizes concepts from SQL using powerful principles from category theory.  For example, <a href="fk.html">CQL generalizes SQL's select-from-where queries from returning single tables to returning many tables related by foreign keys</a>.  Such higher-level abstractions enable developers to be more productive. </li>
 
-<p><a href="http://categoricaldata.net/cql.jar">Java 11 Jar File (14MB)</a></p>
-
-<h2 id="license">License</h2>
-
-<h3 id="categorical-data-ide-agpl-3-license">Categorical Data IDE (AGPL 3 license)</h3>
-
-<p>Copyright (c) 2015+.  All rights reserved.</p>
-
-<p><a href="http://www.gnu.org/licenses/agpl-3.0.en.html" target="_blank">http://www.gnu.org/licenses/agpl-3.0.en.html</a></p>
-
-<p>Contains binary distributions of</p>
-
-<p>jparsec (Apache),
-JUNG (BSD),
-RSyntaxTextArea and autocomplete (BSD),
-Commons Generics, CSV, and Exec (Apache),
-OpenCSV (Apache),
-JFlex (BSD),
-H2 (Mozilla Public License or Eclipse Public License),
-JGraph (BSD),
-txtmark (Apache),
-commons-lang-3 (Apache),
-Google Guava (Apache),
-Gnu Trove (LGPL),</p>
-
-<p>And a source distribution of EASIK (BSD)</p>
-
-      </section>
-      <footer>
-        
-        <p>This project is maintained by <a href="http://github.com/CategoricalData" target="_blank">CategoricalData</a></p>
-        
-        <p><small>Hosted on GitHub Pages &mdash; Theme by <a href="http://github.com/orderedlist" target="_blank">orderedlist</a></small></p>
-      </footer>
-    </div>
-    <script src="/CQL/assets/js/scale.fix.js"></script>
-    
-  </body>
+	
+	
+	</ul>
+	<hr>
+<h2>Key Features</h2>
+	<ul>
+		<li><b>Flexible I/O:</b> data can be imported into and exported out of CQL <a href="jdbc.html">by JDBC-SQL</a>, CSV, and more.</li>
+		<li><b>Visualization:</b> CQL <a href="images/shot2.png">schemas</a>, <a href="images/shot3.png">databases</a>, etc. can be displayed graphically.</li>
+		<li><b>Rich data integrity constraints:</b> CQL schemas contain entities, attributes, and foreign keys - as well as <a href="eqs.html">equations between them</a>.  One use of equations is for <a href="denorm.html">denormalization without the need to manually enforce the consistency of redundant data</a>.</li>   
+		<li><b>Computational schemas:</b> <a href="unitconv.html">user-defined functions are part of CQL schemas</a> and can be specified  using java, javascript, or purely equationally.  CQL's theorem prover can reason about user-defined functions and how they relate to data integrity constraints.</li>  
+		<li><b>More principled than SQL:</b> relational concepts such as <a href="joinless.html">foreign keys re-appear, in a more principled form, in CQL</a>.  And <a href="quotient.html">CQL provides primitives that SQL lacks</a>.</li>			
+		<li><b>100% java</b>.  User-defined functions can be written in java or javascript, and a deep embedding of CQL into Haskell, in collaboration with <a href="https://statebox.org">Statebox</a>, is under development. </li>
+		
+		<li><b>Stateless</b>.  CQL is not a database management system: it neither stores nor updates data.  It is a <a href="https://categoricaldata.net/cql/fql_def.pdf">canonical functional programming language</a> and IDE whose scalability is similar to that of SQL and <a href="https://www.cs.ox.ac.uk/boris.motik/pubs/bkmmpst17becnhmarking-chase.pdf">chase engines</a>.  </li>
+		
+	</ul>
+	
+<br> <br>
+Powered by <a href="https://silmarils.tech">Kan extensions / Silmarils / applied category theory</a>.<br>
+  <a download="Morgoth.png" href="Morgoth.png" title="Gremlin Morgoth">
+<img src = "Morgoth.png" width="200" height="200" alt="Gremlin Morgoth" >
+</a>
+<br><br>
+<a href="https://www.bystadium.com/us/en/stores/cql-merch2-93792/S038133016">Sigma Delta Pi Schwag Store</a>
+</div>
+</body>
 </html>
+ 

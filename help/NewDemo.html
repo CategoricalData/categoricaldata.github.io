@@ -1,0 +1,189 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example NewDemo</h1><pre>
+options
+	require_consistency=false
+	dont_validate_unsafe=true
+	always_reload=true
+	timeout = 60
+#		prover=monoidal 
+		
+
+typeside Ty = literal {
+	external_types
+		Integer -&gt; "java.lang.Integer"
+		Float -&gt; "java.math.BigDecimal"
+		String -&gt; "java.lang.String"
+	external_parsers 
+		Float -&gt; "x =&gt; java.math.BigDecimal.valueOf(java.lang.Double.parseDouble(x))"
+		Integer -&gt; "x =&gt; java.lang.Integer.parseInt(x)"
+		String -&gt; "x =&gt; x"
+	external_functions
+		"+" : Float,Float-&gt;Float = "(x, y) =&gt; x.add(y)"	
+		"*" : Float,Float-&gt;Float = "(x, y) =&gt; x.multiply(y)"	
+		"-" : Float,Float-&gt;Float = "(x, y) =&gt; x.subtract(y)"	
+		"/" : Float,Float-&gt;Float = "(x, y) =&gt; x.divide(y)"	
+		"MAX" : Float,Float-&gt;Float = "(x, y) =&gt; x.max(y)"
+		"MIN" : Float,Float-&gt;Float = "(x, y) =&gt; x.min(y)"		
+	equations
+		
+}		
+
+#schema S1 = importFromJDBC &lt;url&gt;
+schema Olog1Schema = literal : Ty {
+	entity Patient
+	attributes ID first_name last_name birthdate create_date : String
+
+	entity Visit
+	attributes ID patient_id visit_date : String
+
+	entity Observation
+	attributes ID visit_id clinician_id obs_type observation : String
+}
+constraints Olog1Constraints = literal : Olog1Schema {
+	forall x y : Observation where x.ID = y.ID -&gt; where x = y
+	forall x y : Visit where x.ID = y.ID -&gt; where x = y
+	forall x y : Patient where x.ID = y.ID -&gt; where x = y
+	forall x : Observation -&gt; exists y : Visit where x.visit_id = y.ID
+	forall x : Visit -&gt; exists y : Patient where x.patient_id = y.ID
+}
+schema Olog2Schema = literal : Ty {
+	entity Prescription
+	attributes ID patient_id date details : String
+
+	entity Patient 
+	attributes ID fname lname dob : String
+
+	entity Observation
+	attributes ID patient_id clinician_id obs_type obs_date observation : String
+}
+constraints Olog2Constraints = literal : Olog2Schema {
+	forall x y : Observation where x.ID = y.ID -&gt; where x = y
+	forall x y : Prescription where x.ID = y.ID -&gt; where x = y
+	forall x y : Patient where x.ID = y.ID -&gt; where x = y
+	forall x : Prescription -&gt; exists y : Patient where x.patient_id = y.ID
+	forall x : Observation -&gt; exists y : Patient where x.patient_id = y.ID
+}
+#instance O1 = importJdbc &lt;url&gt;
+instance Olog1Data = literal : Olog1Schema {
+	generators
+		p1 p2 p3 : Patient
+		v1 v2 v3 : Visit
+		o1 o2 o3 : Observation
+	equations
+		p1.ID = 937189 p1.first_name = john p1.last_name = doe 
+		p1.birthdate = 340465020 p1.create_date = 1187438212 	
+		p2.ID = 937190 p2.first_name = amrit p2.last_name = kumar 
+		p2.birthdate = 246222505 p2.create_date = 1187444008
+		p3.ID = 937191 p3.first_name = alexandra p3.last_name = grant 
+		p3.birthdate = 121408849 p3.create_date = 1187445155 	
+
+		v1.ID = 1237827 v1.patient_id = 937189 v1.visit_date = 1187438212
+		v2.ID = 1237828 v2.patient_id = 937190 v2.visit_date = 1187444008
+		v3.ID = 1237829 v3.patient_id = 937191 v3.visit_date = 1187445155
+
+		o1.ID = 487298329 o1.visit_id = 1237827 o1.clinician_id = 562 
+		o1.obs_type = HR o1.observation = 114
+		o2.ID = 487298330 o2.visit_id = 1237827 o2.clinician_id = 562 
+		o2.obs_type = WT o2.observation = 180
+		o3.ID = 487298331 o3.visit_id = 1237827 o3.clinician_id = 562 
+		o3.obs_type = BP o3.observation = "130/82"
+}
+
+instance Olog2Data = literal : Olog2Schema {
+generators
+		p1 p2 p3 : Patient
+		v1 v2 v3 : Prescription
+		o1 o2 o3 : Observation
+	equations
+		p1.ID = 25234 p1.fname = alexandra p1.lname = grant 
+		p1.dob = 121408849
+		p2.ID = 25235 p2.fname = vincent p2.lname = "von hoff" 
+		p2.dob = 409235232
+		p3.ID = 25236 p3.fname = brian p3.lname = tsai 
+		p3.dob = 380665171 	
+
+		v1.ID = 675345 v1.patient_id = 25234 v1.date = 1639676732
+		v1.details = Enalapril
+		v2.ID = 675346 v2.patient_id = 25234 v2.date = 1639696544
+		v2.details = chlorothiazide
+		v3.ID = 675347 v3.patient_id = 25235 v3.date = 1639704522
+		v3.details = lisinopril
+
+		o1.ID = 154298449 o1.patient_id = 25234 o1.clinician_id = 132 
+		o1.obs_type = HR o1.obs_date = 1639676732 o1.observation=116
+		o2.ID = 154298450 o2.patient_id = 25234 o2.clinician_id = 132 
+		o2.obs_type = WT o2.obs_date = 1639676732 o2.observation=220
+		o3.ID = 154298451 o3.patient_id = 25234 o3.clinician_id = 132 
+		o3.obs_type = BP o3.obs_date = 1639676732 o3.observation="132/82"
+
+}
+command check1 = check Olog1Constraints Olog1Data
+command check2 = check Olog2Constraints Olog2Data
+
+schema_colimit C = quotient Olog1Schema + Olog2Schema : Ty {
+	entity_equations
+		Olog1Schema.Patient = Olog2Schema.Patient
+		Olog1Schema.Observation = Olog2Schema.Observation
+	observation_equations
+		forall x.     x.first_name = x.fname #x.first_name = uppercase(x.fname)
+		forall x.     x.last_name = x.lname 
+		forall x.     x.birthdate = x.dob #x.bd = x.dob+1
+		forall x.     x.Olog1Schema_Observation_observation = x.Olog2Schema_Observation_observation
+		forall x.     x.Olog1Schema_Observation_ID = x.Olog2Schema_Observation_ID
+		forall x.     x.Olog1Schema_Observation_clinician_id = x.Olog2Schema_Observation_clinician_id  
+		forall x.     x.Olog1Schema_Observation_obs_type = x.Olog2Schema_Observation_obs_type
+}
+
+schema_colimit D = simplify C
+
+instance Olog1DataFwd = sigma (getMapping D Olog1Schema) Olog1Data
+instance Olog2DataFwd = sigma (getMapping D Olog2Schema) Olog2Data
+
+constraints Olog1ConstraintsFwd = sigma (getMapping D Olog1Schema) Olog1Constraints
+constraints Olog2ConstraintsFwd = sigma (getMapping D Olog2Schema) Olog2Constraints
+
+instance CoProd = coproduct Olog1DataFwd + Olog2DataFwd  : getSchema D
+
+constraints Rules = literal : getSchema D {
+	imports Olog1ConstraintsFwd Olog2ConstraintsFwd	
+	
+	forall x y : Patient where x.first_name=y.first_name x.last_name=y.last_name 
+	-&gt; where x=y
+
+	forall x y : Observation where x.obs_date = y.obs_date 
+	 -&gt; where x.visit_id = y.visit_id
+
+	forall x y : Observation where x.visit_id = y.visit_id
+	 -&gt; where x.patient_id = y.patient_id
+
+	
+	forall x : Observation y : Visit z : Patient z2 : Patient 
+		where x.visit_id = y.ID z.ID = y.patient_id  x.patient_id = z2.Olog2Schema_Patient_ID 
+	 -&gt; where z = z2
+
+	forall x y : Observation where x.visit_id = y.visit_id 
+	-&gt; where x.obs_date = y.obs_date 
+
+	forall x : Observation y : Visit where x.visit_id = y.ID 
+	-&gt; where y.visit_date = x.obs_date
+}
+
+instance Colim = chase Rules CoProd
+
+instance Olog1DataBkwd = delta (getMapping D Olog1Schema) Colim
+instance Olog2DataBkwd = delta (getMapping D Olog2Schema) Colim
+</pre> Keywords:<br/></br>			<a href="typesidetypeside_literal.html" >typeside_literal</a><br />
+			<a href="instancechase.html" >chase</a><br />
+			<a href="constraintsconstraints_literal.html" >constraints_literal</a><br />
+			<a href="constraintssigma.html" >sigma</a><br />
+			<a href="instancedelta.html" >delta</a><br />
+			<a href="schemaschema_literal.html" >schema_literal</a><br />
+			<a href="instanceinstance_literal.html" >instance_literal</a><br />
+			<a href="commandcheck.html" >check</a><br />
+			<a href="schema_colimitsimplify.html" >simplify</a><br />
+			<a href="schema_colimitquotient.html" >quotient</a><br />
+			<a href="instancecoproduct.html" >coproduct</a><br />
+			<a href="instancesigma.html" >sigma</a><br />
+<br/>Options:<br/></br>
+<br/></br>
+<hr/><h3>instance Olog2Data</h3><div><table id="table342" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Observation</b></caption><tr><th onclick="sortTable('table342', 0)">ID</th><th onclick="sortTable('table342', 1)">ID</th><th onclick="sortTable('table342', 2)">patient_id</th><th onclick="sortTable('table342', 3)">clinician_id</th><th onclick="sortTable('table342', 4)">obs_type</th><th onclick="sortTable('table342', 5)">obs_date</th><th onclick="sortTable('table342', 6)">observation</th></tr><tr><td>0</td><td>154298449</td><td>25234</td><td>132</td><td>HR</td><td>1639676732</td><td>116</td></tr><tr><td>1</td><td>154298450</td><td>25234</td><td>132</td><td>WT</td><td>1639676732</td><td>220</td></tr><tr><td>2</td><td>154298451</td><td>25234</td><td>132</td><td>BP</td><td>1639676732</td><td>132/82</td></tr></table><table id="table343" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Patient</b></caption><tr><th onclick="sortTable('table343', 0)">ID</th><th onclick="sortTable('table343', 1)">ID</th><th onclick="sortTable('table343', 2)">fname</th><th onclick="sortTable('table343', 3)">lname</th><th onclick="sortTable('table343', 4)">dob</th></tr><tr><td>3</td><td>25234</td><td>alexandra</td><td>grant</td><td>121408849</td></tr><tr><td>4</td><td>25235</td><td>vincent</td><td>von hoff</td><td>409235232</td></tr><tr><td>5</td><td>25236</td><td>brian</td><td>tsai</td><td>380665171</td></tr></table><table id="table344" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Prescription</b></caption><tr><th onclick="sortTable('table344', 0)">ID</th><th onclick="sortTable('table344', 1)">ID</th><th onclick="sortTable('table344', 2)">patient_id</th><th onclick="sortTable('table344', 3)">date</th><th onclick="sortTable('table344', 4)">details</th></tr><tr><td>6</td><td>675345</td><td>25234</td><td>1639676732</td><td>Enalapril</td></tr><tr><td>7</td><td>675346</td><td>25234</td><td>1639696544</td><td>chlorothiazide</td></tr><tr><td>8</td><td>675347</td><td>25235</td><td>1639704522</td><td>lisinopril</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance Olog1Data</h3><div><table id="table345" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Observation</b></caption><tr><th onclick="sortTable('table345', 0)">ID</th><th onclick="sortTable('table345', 1)">ID</th><th onclick="sortTable('table345', 2)">visit_id</th><th onclick="sortTable('table345', 3)">clinician_id</th><th onclick="sortTable('table345', 4)">obs_type</th><th onclick="sortTable('table345', 5)">observation</th></tr><tr><td>0</td><td>487298329</td><td>1237827</td><td>562</td><td>HR</td><td>114</td></tr><tr><td>1</td><td>487298330</td><td>1237827</td><td>562</td><td>WT</td><td>180</td></tr><tr><td>2</td><td>487298331</td><td>1237827</td><td>562</td><td>BP</td><td>130/82</td></tr></table><table id="table346" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Patient</b></caption><tr><th onclick="sortTable('table346', 0)">ID</th><th onclick="sortTable('table346', 1)">ID</th><th onclick="sortTable('table346', 2)">first_name</th><th onclick="sortTable('table346', 3)">last_name</th><th onclick="sortTable('table346', 4)">birthdate</th><th onclick="sortTable('table346', 5)">create_date</th></tr><tr><td>3</td><td>937189</td><td>john</td><td>doe</td><td>340465020</td><td>1187438212</td></tr><tr><td>4</td><td>937190</td><td>amrit</td><td>kumar</td><td>246222505</td><td>1187444008</td></tr><tr><td>5</td><td>937191</td><td>alexandra</td><td>grant</td><td>121408849</td><td>1187445155</td></tr></table><table id="table347" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Visit</b></caption><tr><th onclick="sortTable('table347', 0)">ID</th><th onclick="sortTable('table347', 1)">ID</th><th onclick="sortTable('table347', 2)">patient_id</th><th onclick="sortTable('table347', 3)">visit_date</th></tr><tr><td>6</td><td>1237827</td><td>937189</td><td>1187438212</td></tr><tr><td>7</td><td>1237828</td><td>937190</td><td>1187444008</td></tr><tr><td>8</td><td>1237829</td><td>937191</td><td>1187445155</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance Olog1DataFwd</h3><div><table id="table348" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Observation</b></caption><tr><th onclick="sortTable('table348', 0)">ID</th><th onclick="sortTable('table348', 1)">observation</th><th onclick="sortTable('table348', 2)">clinician_id</th><th onclick="sortTable('table348', 3)">obs_date</th><th onclick="sortTable('table348', 4)">ID</th><th onclick="sortTable('table348', 5)">patient_id</th><th onclick="sortTable('table348', 6)">obs_type</th><th onclick="sortTable('table348', 7)">visit_id</th></tr><tr><td>0</td><td>114</td><td>562</td><td>?0</td><td>487298329</td><td>?1</td><td>HR</td><td>1237827</td></tr><tr><td>1</td><td>180</td><td>562</td><td>?2</td><td>487298330</td><td>?3</td><td>WT</td><td>1237827</td></tr><tr><td>2</td><td>130/82</td><td>562</td><td>?4</td><td>487298331</td><td>?5</td><td>BP</td><td>1237827</td></tr></table><table id="table349" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Patient</b></caption><tr><th onclick="sortTable('table349', 0)">ID</th><th onclick="sortTable('table349', 1)">create_date</th><th onclick="sortTable('table349', 2)">last_name</th><th onclick="sortTable('table349', 3)">ID</th><th onclick="sortTable('table349', 4)">Olog2Schema_Patient_ID</th><th onclick="sortTable('table349', 5)">birthdate</th><th onclick="sortTable('table349', 6)">first_name</th></tr><tr><td>3</td><td>1187438212</td><td>doe</td><td>937189</td><td>?6</td><td>340465020</td><td>john</td></tr><tr><td>4</td><td>1187444008</td><td>kumar</td><td>937190</td><td>?7</td><td>246222505</td><td>amrit</td></tr><tr><td>5</td><td>1187445155</td><td>grant</td><td>937191</td><td>?8</td><td>121408849</td><td>alexandra</td></tr></table><table id="table350" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Prescription</b></caption><tr><th onclick="sortTable('table350', 0)">ID</th><th onclick="sortTable('table350', 1)">ID</th><th onclick="sortTable('table350', 2)">patient_id</th><th onclick="sortTable('table350', 3)">date</th><th onclick="sortTable('table350', 4)">details</th></tr></table><table id="table351" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Visit</b></caption><tr><th onclick="sortTable('table351', 0)">ID</th><th onclick="sortTable('table351', 1)">visit_date</th><th onclick="sortTable('table351', 2)">patient_id</th><th onclick="sortTable('table351', 3)">ID</th></tr><tr><td>6</td><td>1187438212</td><td>937189</td><td>1237827</td></tr><tr><td>7</td><td>1187444008</td><td>937190</td><td>1237828</td></tr><tr><td>8</td><td>1187445155</td><td>937191</td><td>1237829</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance Olog2DataFwd</h3><div><table id="table352" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Observation</b></caption><tr><th onclick="sortTable('table352', 0)">ID</th><th onclick="sortTable('table352', 1)">observation</th><th onclick="sortTable('table352', 2)">clinician_id</th><th onclick="sortTable('table352', 3)">obs_date</th><th onclick="sortTable('table352', 4)">ID</th><th onclick="sortTable('table352', 5)">patient_id</th><th onclick="sortTable('table352', 6)">obs_type</th><th onclick="sortTable('table352', 7)">visit_id</th></tr><tr><td>0</td><td>116</td><td>132</td><td>1639676732</td><td>154298449</td><td>25234</td><td>HR</td><td>?0</td></tr><tr><td>1</td><td>220</td><td>132</td><td>1639676732</td><td>154298450</td><td>25234</td><td>WT</td><td>?1</td></tr><tr><td>2</td><td>132/82</td><td>132</td><td>1639676732</td><td>154298451</td><td>25234</td><td>BP</td><td>?2</td></tr></table><table id="table353" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Patient</b></caption><tr><th onclick="sortTable('table353', 0)">ID</th><th onclick="sortTable('table353', 1)">create_date</th><th onclick="sortTable('table353', 2)">last_name</th><th onclick="sortTable('table353', 3)">ID</th><th onclick="sortTable('table353', 4)">Olog2Schema_Patient_ID</th><th onclick="sortTable('table353', 5)">birthdate</th><th onclick="sortTable('table353', 6)">first_name</th></tr><tr><td>3</td><td>?3</td><td>grant</td><td>?4</td><td>25234</td><td>121408849</td><td>alexandra</td></tr><tr><td>4</td><td>?5</td><td>von hoff</td><td>?6</td><td>25235</td><td>409235232</td><td>vincent</td></tr><tr><td>5</td><td>?7</td><td>tsai</td><td>?8</td><td>25236</td><td>380665171</td><td>brian</td></tr></table><table id="table354" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Prescription</b></caption><tr><th onclick="sortTable('table354', 0)">ID</th><th onclick="sortTable('table354', 1)">ID</th><th onclick="sortTable('table354', 2)">patient_id</th><th onclick="sortTable('table354', 3)">date</th><th onclick="sortTable('table354', 4)">details</th></tr><tr><td>6</td><td>675345</td><td>25234</td><td>1639676732</td><td>Enalapril</td></tr><tr><td>7</td><td>675346</td><td>25234</td><td>1639696544</td><td>chlorothiazide</td></tr><tr><td>8</td><td>675347</td><td>25235</td><td>1639704522</td><td>lisinopril</td></tr></table><table id="table355" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Visit</b></caption><tr><th onclick="sortTable('table355', 0)">ID</th><th onclick="sortTable('table355', 1)">visit_date</th><th onclick="sortTable('table355', 2)">patient_id</th><th onclick="sortTable('table355', 3)">ID</th></tr></table></div><br style="clear:both;"/><hr/><h3>instance CoProd</h3><div><table id="table356" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Observation</b></caption><tr><th onclick="sortTable('table356', 0)">ID</th><th onclick="sortTable('table356', 1)">observation</th><th onclick="sortTable('table356', 2)">clinician_id</th><th onclick="sortTable('table356', 3)">obs_date</th><th onclick="sortTable('table356', 4)">ID</th><th onclick="sortTable('table356', 5)">patient_id</th><th onclick="sortTable('table356', 6)">obs_type</th><th onclick="sortTable('table356', 7)">visit_id</th></tr><tr><td>0</td><td>114</td><td>562</td><td>?0</td><td>487298329</td><td>?1</td><td>HR</td><td>1237827</td></tr><tr><td>1</td><td>180</td><td>562</td><td>?2</td><td>487298330</td><td>?3</td><td>WT</td><td>1237827</td></tr><tr><td>2</td><td>130/82</td><td>562</td><td>?4</td><td>487298331</td><td>?5</td><td>BP</td><td>1237827</td></tr><tr><td>3</td><td>116</td><td>132</td><td>1639676732</td><td>154298449</td><td>25234</td><td>HR</td><td>?6</td></tr><tr><td>4</td><td>220</td><td>132</td><td>1639676732</td><td>154298450</td><td>25234</td><td>WT</td><td>?7</td></tr><tr><td>5</td><td>132/82</td><td>132</td><td>1639676732</td><td>154298451</td><td>25234</td><td>BP</td><td>?8</td></tr></table><table id="table357" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Patient</b></caption><tr><th onclick="sortTable('table357', 0)">ID</th><th onclick="sortTable('table357', 1)">create_date</th><th onclick="sortTable('table357', 2)">last_name</th><th onclick="sortTable('table357', 3)">ID</th><th onclick="sortTable('table357', 4)">Olog2Schema_Patient_ID</th><th onclick="sortTable('table357', 5)">birthdate</th><th onclick="sortTable('table357', 6)">first_name</th></tr><tr><td>6</td><td>1187438212</td><td>doe</td><td>937189</td><td>?9</td><td>340465020</td><td>john</td></tr><tr><td>7</td><td>1187444008</td><td>kumar</td><td>937190</td><td>?10</td><td>246222505</td><td>amrit</td></tr><tr><td>8</td><td>1187445155</td><td>grant</td><td>937191</td><td>?11</td><td>121408849</td><td>alexandra</td></tr><tr><td>9</td><td>?12</td><td>grant</td><td>?13</td><td>25234</td><td>121408849</td><td>alexandra</td></tr><tr><td>10</td><td>?14</td><td>von hoff</td><td>?15</td><td>25235</td><td>409235232</td><td>vincent</td></tr><tr><td>11</td><td>?16</td><td>tsai</td><td>?17</td><td>25236</td><td>380665171</td><td>brian</td></tr></table><table id="table358" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Prescription</b></caption><tr><th onclick="sortTable('table358', 0)">ID</th><th onclick="sortTable('table358', 1)">ID</th><th onclick="sortTable('table358', 2)">patient_id</th><th onclick="sortTable('table358', 3)">date</th><th onclick="sortTable('table358', 4)">details</th></tr><tr><td>12</td><td>675345</td><td>25234</td><td>1639676732</td><td>Enalapril</td></tr><tr><td>13</td><td>675346</td><td>25234</td><td>1639696544</td><td>chlorothiazide</td></tr><tr><td>14</td><td>675347</td><td>25235</td><td>1639704522</td><td>lisinopril</td></tr></table><table id="table359" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Visit</b></caption><tr><th onclick="sortTable('table359', 0)">ID</th><th onclick="sortTable('table359', 1)">visit_date</th><th onclick="sortTable('table359', 2)">patient_id</th><th onclick="sortTable('table359', 3)">ID</th></tr><tr><td>15</td><td>1187438212</td><td>937189</td><td>1237827</td></tr><tr><td>16</td><td>1187444008</td><td>937190</td><td>1237828</td></tr><tr><td>17</td><td>1187445155</td><td>937191</td><td>1237829</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance Colim</h3><div><table id="table360" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Observation</b></caption><tr><th onclick="sortTable('table360', 0)">ID</th><th onclick="sortTable('table360', 1)">observation</th><th onclick="sortTable('table360', 2)">clinician_id</th><th onclick="sortTable('table360', 3)">obs_date</th><th onclick="sortTable('table360', 4)">ID</th><th onclick="sortTable('table360', 5)">patient_id</th><th onclick="sortTable('table360', 6)">obs_type</th><th onclick="sortTable('table360', 7)">visit_id</th></tr><tr><td>0</td><td>132/82</td><td>132</td><td>1639676732</td><td>154298451</td><td>25234</td><td>BP</td><td>?0</td></tr><tr><td>1</td><td>220</td><td>132</td><td>1639676732</td><td>154298450</td><td>25234</td><td>WT</td><td>?0</td></tr><tr><td>2</td><td>116</td><td>132</td><td>1639676732</td><td>154298449</td><td>25234</td><td>HR</td><td>?0</td></tr><tr><td>3</td><td>114</td><td>562</td><td>1187438212</td><td>487298329</td><td>?1</td><td>HR</td><td>1237827</td></tr><tr><td>4</td><td>180</td><td>562</td><td>1187438212</td><td>487298330</td><td>?1</td><td>WT</td><td>1237827</td></tr><tr><td>5</td><td>130/82</td><td>562</td><td>1187438212</td><td>487298331</td><td>?1</td><td>BP</td><td>1237827</td></tr></table><table id="table361" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Patient</b></caption><tr><th onclick="sortTable('table361', 0)">ID</th><th onclick="sortTable('table361', 1)">create_date</th><th onclick="sortTable('table361', 2)">last_name</th><th onclick="sortTable('table361', 3)">ID</th><th onclick="sortTable('table361', 4)">Olog2Schema_Patient_ID</th><th onclick="sortTable('table361', 5)">birthdate</th><th onclick="sortTable('table361', 6)">first_name</th></tr><tr><td>6</td><td>1187445155</td><td>grant</td><td>937191</td><td>25234</td><td>121408849</td><td>alexandra</td></tr><tr><td>7</td><td>1187438212</td><td>doe</td><td>937189</td><td>?1</td><td>340465020</td><td>john</td></tr><tr><td>8</td><td>?2</td><td>von hoff</td><td>?3</td><td>25235</td><td>409235232</td><td>vincent</td></tr><tr><td>9</td><td>?4</td><td>tsai</td><td>?5</td><td>25236</td><td>380665171</td><td>brian</td></tr><tr><td>10</td><td>1187444008</td><td>kumar</td><td>937190</td><td>?6</td><td>246222505</td><td>amrit</td></tr></table><table id="table362" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Prescription</b></caption><tr><th onclick="sortTable('table362', 0)">ID</th><th onclick="sortTable('table362', 1)">ID</th><th onclick="sortTable('table362', 2)">patient_id</th><th onclick="sortTable('table362', 3)">date</th><th onclick="sortTable('table362', 4)">details</th></tr><tr><td>11</td><td>675345</td><td>25234</td><td>1639676732</td><td>Enalapril</td></tr><tr><td>12</td><td>675346</td><td>25234</td><td>1639696544</td><td>chlorothiazide</td></tr><tr><td>13</td><td>675347</td><td>25235</td><td>1639704522</td><td>lisinopril</td></tr></table><table id="table363" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Visit</b></caption><tr><th onclick="sortTable('table363', 0)">ID</th><th onclick="sortTable('table363', 1)">visit_date</th><th onclick="sortTable('table363', 2)">patient_id</th><th onclick="sortTable('table363', 3)">ID</th></tr><tr><td>14</td><td>1639676732</td><td>937191</td><td>?0</td></tr><tr><td>15</td><td>1187438212</td><td>937189</td><td>1237827</td></tr><tr><td>16</td><td>1187444008</td><td>937190</td><td>1237828</td></tr><tr><td>17</td><td>1187445155</td><td>937191</td><td>1237829</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance Olog2DataBkwd</h3><div><table id="table364" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Observation</b></caption><tr><th onclick="sortTable('table364', 0)">ID</th><th onclick="sortTable('table364', 1)">ID</th><th onclick="sortTable('table364', 2)">patient_id</th><th onclick="sortTable('table364', 3)">clinician_id</th><th onclick="sortTable('table364', 4)">obs_type</th><th onclick="sortTable('table364', 5)">obs_date</th><th onclick="sortTable('table364', 6)">observation</th></tr><tr><td>0</td><td>154298451</td><td>25234</td><td>132</td><td>BP</td><td>1639676732</td><td>132/82</td></tr><tr><td>1</td><td>154298450</td><td>25234</td><td>132</td><td>WT</td><td>1639676732</td><td>220</td></tr><tr><td>2</td><td>154298449</td><td>25234</td><td>132</td><td>HR</td><td>1639676732</td><td>116</td></tr><tr><td>3</td><td>487298329</td><td>?0</td><td>562</td><td>HR</td><td>1187438212</td><td>114</td></tr><tr><td>4</td><td>487298330</td><td>?0</td><td>562</td><td>WT</td><td>1187438212</td><td>180</td></tr><tr><td>5</td><td>487298331</td><td>?0</td><td>562</td><td>BP</td><td>1187438212</td><td>130/82</td></tr></table><table id="table365" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Patient</b></caption><tr><th onclick="sortTable('table365', 0)">ID</th><th onclick="sortTable('table365', 1)">ID</th><th onclick="sortTable('table365', 2)">fname</th><th onclick="sortTable('table365', 3)">lname</th><th onclick="sortTable('table365', 4)">dob</th></tr><tr><td>6</td><td>25234</td><td>alexandra</td><td>grant</td><td>121408849</td></tr><tr><td>7</td><td>?0</td><td>john</td><td>doe</td><td>340465020</td></tr><tr><td>8</td><td>25235</td><td>vincent</td><td>von hoff</td><td>409235232</td></tr><tr><td>9</td><td>25236</td><td>brian</td><td>tsai</td><td>380665171</td></tr><tr><td>10</td><td>?1</td><td>amrit</td><td>kumar</td><td>246222505</td></tr></table><table id="table366" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Prescription</b></caption><tr><th onclick="sortTable('table366', 0)">ID</th><th onclick="sortTable('table366', 1)">ID</th><th onclick="sortTable('table366', 2)">patient_id</th><th onclick="sortTable('table366', 3)">date</th><th onclick="sortTable('table366', 4)">details</th></tr><tr><td>11</td><td>675345</td><td>25234</td><td>1639676732</td><td>Enalapril</td></tr><tr><td>12</td><td>675346</td><td>25234</td><td>1639696544</td><td>chlorothiazide</td></tr><tr><td>13</td><td>675347</td><td>25235</td><td>1639704522</td><td>lisinopril</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance Olog1DataBkwd</h3><div><table id="table367" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Observation</b></caption><tr><th onclick="sortTable('table367', 0)">ID</th><th onclick="sortTable('table367', 1)">ID</th><th onclick="sortTable('table367', 2)">visit_id</th><th onclick="sortTable('table367', 3)">clinician_id</th><th onclick="sortTable('table367', 4)">obs_type</th><th onclick="sortTable('table367', 5)">observation</th></tr><tr><td>0</td><td>154298451</td><td>?0</td><td>132</td><td>BP</td><td>132/82</td></tr><tr><td>1</td><td>154298450</td><td>?0</td><td>132</td><td>WT</td><td>220</td></tr><tr><td>2</td><td>154298449</td><td>?0</td><td>132</td><td>HR</td><td>116</td></tr><tr><td>3</td><td>487298329</td><td>1237827</td><td>562</td><td>HR</td><td>114</td></tr><tr><td>4</td><td>487298330</td><td>1237827</td><td>562</td><td>WT</td><td>180</td></tr><tr><td>5</td><td>487298331</td><td>1237827</td><td>562</td><td>BP</td><td>130/82</td></tr></table><table id="table368" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Patient</b></caption><tr><th onclick="sortTable('table368', 0)">ID</th><th onclick="sortTable('table368', 1)">ID</th><th onclick="sortTable('table368', 2)">first_name</th><th onclick="sortTable('table368', 3)">last_name</th><th onclick="sortTable('table368', 4)">birthdate</th><th onclick="sortTable('table368', 5)">create_date</th></tr><tr><td>6</td><td>937191</td><td>alexandra</td><td>grant</td><td>121408849</td><td>1187445155</td></tr><tr><td>7</td><td>937189</td><td>john</td><td>doe</td><td>340465020</td><td>1187438212</td></tr><tr><td>8</td><td>?1</td><td>vincent</td><td>von hoff</td><td>409235232</td><td>?2</td></tr><tr><td>9</td><td>?3</td><td>brian</td><td>tsai</td><td>380665171</td><td>?4</td></tr><tr><td>10</td><td>937190</td><td>amrit</td><td>kumar</td><td>246222505</td><td>1187444008</td></tr></table><table id="table369" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Visit</b></caption><tr><th onclick="sortTable('table369', 0)">ID</th><th onclick="sortTable('table369', 1)">ID</th><th onclick="sortTable('table369', 2)">patient_id</th><th onclick="sortTable('table369', 3)">visit_date</th></tr><tr><td>11</td><td>?0</td><td>937191</td><td>1639676732</td></tr><tr><td>12</td><td>1237827</td><td>937189</td><td>1187438212</td></tr><tr><td>13</td><td>1237828</td><td>937190</td><td>1187444008</td></tr><tr><td>14</td><td>1237829</td><td>937191</td><td>1187445155</td></tr></table></div><br style="clear:both;"/><hr/><h3>command check1</h3><pre>Satisfies</pre><hr/><h3>command check2</h3><pre>Satisfies</pre></body></html>

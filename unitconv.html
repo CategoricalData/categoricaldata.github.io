@@ -1,0 +1,129 @@
+<!DOCTYPE HTML>
+<html  lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CD4ENCFV58"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-64DRFX06T1"></script>
+<script >
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-64DRFX06T1');
+</script>
+<title>CQL</title>
+<link rel="shortcut icon" href="../favicon.ico" >
+<link rel="StyleSheet" href="css/nstyle.css" type="text/css" media="all" > 
+<meta charset="utf-8">
+<meta name="keywords" content="CQL,SQL,Data Integration, Data Migration, Category Theory, ETL" >
+<meta name="description" content="Conexus CQL" >
+<meta name="keywords" content="CQL, functorial, category theory, data integration, data migration, categorical databases, SQL, categorical query language" >
+</head>
+<body>
+<div id="content">
+<h1>Categorical Databases<img src="logo.png" height="32" style="float: right;" alt="logo" ></h1>
+<a href="https://categoricaldata.net">Home</a> | 
+<a href="download.html">Download</a> | 
+<a href="examples.html">Getting Started</a> | 
+<a href="help/index.html" target="_blank">Manual</a> |
+<a href="https://github.com/CategoricalData/CQL/wiki" target="_blank">Wiki</a> |
+<a href="papers.html">Papers</a> |
+<a href="screens.html">Screen Shots</a> |
+<a href="https://github.com/categoricalData" target="_blank">Github</a> |
+<a href="https://groups.google.com/forum/#!forum/categoricaldata" target="_blank">Google Group</a> |
+<a href="https://conexus.com" target="_blank">Conexus</a> |
+<a href="mailto:info@conexus.com">Contact</a> 
+<br><br>
+<hr>
+	
+					<h2>High-assurance User-defined Functions</h2> 
+					
+					<p>Many data integration tasks require user defined functions (UDFs): for example, to convert inches to centimeters.  When UDFs are defined or used incorrectly, data can be silently corrupted.  In CQL, user-defined functions are first-class schema elements, and CQL's automated theorem proving technology seamlessly provides high-assurance compile-time aid to schemas with user-defined functions.
+					</p>
+					<p>This example (built in to the IDE with name Unit Conv) defines a source schema about American airplanes, which have wing spans in inches, and a target schema about European airplanes, which have wing spans in centimeters.  The type side specifies how to convert inches to centimeters, and a query which does not convert inches to centimeters is rejected.  Although this example uses a relatively simply type conversion, CQL supports user-defined types defined by arbitrary equations.
+					</p>
+					
+					<p>We start by defining a type side that contains two user defined types, inches and centimeters, as well as a conversion between them:
+					</p>
+				
+<pre>typeside Ty = literal { 
+	java_types
+		in = "java.lang.Double"
+		cm = "java.lang.Double"		
+	java_constants
+		in = "return java.lang.Double.parseDouble(input[0])"
+		cm = "return java.lang.Double.parseDouble(input[0])"
+	java_functions
+		inToCm : in -> cm = "return (2.54 * input[0])"		
+}</pre>
+
+<br >
+					<p>The source and target schemas contain wingspans in inches (for American planes) and centimeters (for European planes):
+					</p>
+					
+<pre>schema AmericanAirplane = literal : Ty {
+	entities 
+		Wing
+	attributes
+		wingLength : Wing -> in
+}
+
+schema EuropeanAirplane = literal : Ty {
+	entities 
+		Wing
+	attributes
+		wingLength : Wing -> cm
+}</pre>
+
+<br>
+					<p>An American airplane instance is, for example: 
+					</p>
+			
+<pre>instance Boeing747 = literal : AmericanAirplane {
+	generators
+		left right : Wing
+	equations
+		left.wingLength = right.wingLength
+		left.wingLength = 500	
+}</pre>
+
+<img src="images/examples/unitconv1.png" alt="unitconv1" width="700" >
+<br >
+
+					<p>To convert an American airplane to a European airplane requires converting inches to centimeters:
+					</p>
+				
+<pre>query AmericanToEuropean = literal : AmericanAirplane -> EuropeanAirplane {
+	entities 
+		Wing -> {from w:Wing
+			    return wingLength -> inToCm(w.wingLength)}
+}
+
+instance Boeing747Metric = eval AmericanToEuropean Boeing747
+</pre>
+
+<img src="images/examples/unitconv2.png" alt="unitconv2" width="700" >
+
+					<p>A similar query that omits the unit conversion is rejected:
+					</p>
+
+<pre>query AmericanToEuropean_disastrous_conversion = literal : AmericanAirplane -> EuropeanAirplane {
+	entities 
+		Wing ->	{from w:Wing
+				 return wingLength -> w.wingLength}
+}
+
+Error in query AmericanToEuropean_disastrous_conversion: 
+ in attribute wingLength, expected sort of wingLength(w) is cm 
+ but wingLength(w) actually has sort in.
+</pre>
+
+<br >
+					<p>A screen shot of the entire development is shown below:</p>
+<img src="images/examples/unitconv3.png" alt="unitconv3" width="700" >
+
+				
+	</div><!--close main-->
+	 
+</body>
+</html>

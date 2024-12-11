@@ -1,0 +1,149 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example vsSQL1</h1><pre>
+#Problem 1:
+#
+#Find a sub-database (i.e., populate fresh Employee and Department tables,
+#including constraints) where
+#
+# 1) every employee works in the same department as their manager
+# 2) every department's secretary works in that department
+#
+#Schema:
+#
+#DROP TABLE IF EXISTS Employee;
+#DROP TABLE IF EXISTS Department;
+#
+#CREATE TABLE Employee(
+#id INT PRIMARY KEY,
+#name VARCHAR(255),
+#manager INT,
+#worksIn INT
+#);
+#
+#CREATE TABLE Department(
+#id INT PRIMARY KEY,
+#name VARCHAR(255),
+#secretary INT,
+#);
+
+#ALTER TABLE Employee ADD CONSTRAINT e1
+#FOREIGN KEY (manager) REFERENCES Employee (id);
+
+#ALTER TABLE Employee ADD CONSTRAINT e2
+#FOREIGN KEY (worksIn) REFERENCES Department (id);
+
+#ALTER TABLE Department ADD CONSTRAINT d1
+#FOREIGN KEY (secretary) REFERENCES Employee (id);
+
+#Example input DB:
+
+#INSERT INTO Employee VALUES
+#(101, 'Alan', 103, 10),
+#(102, 'Camille', 102, 2),
+#(103, 'Andrey', 103, 10);
+
+#INSERT INTO Department VALUES
+#(10, 'Applied Math', 101),
+#(2, 'Pure Math', 102);
+
+###################################################################
+#  Example schema and instance about employees
+
+typeside Ty = literal {
+	external_types
+		String -&gt; "java.lang.String"
+		Int -&gt; "java.lang.Integer"
+	external_parsers
+		String -&gt; "x =&gt; x"
+		Int -&gt; "parseInt"
+}
+
+schema S = literal : Ty {
+	entities
+		Employee
+		Department
+	foreign_keys
+		manager   : Employee -&gt; Employee
+		worksIn   : Employee -&gt; Department
+		secretary : Department -&gt; Employee
+ 	attributes
+  		first 	: Employee -&gt; String
+     	name 	: Department -&gt; String
+}
+
+schema T = literal : Ty {
+	imports
+		S
+	path_equations
+		Employee.manager.worksIn = Employee.worksIn
+  		Department.secretary.worksIn = Department
+}
+
+# Error in query bad: Target equation v.manager.worksIn = v.worksIn not respected:
+#  transforms to v.manager.worksIn = v.worksIn, which is not provable in the sub-query for Employee
+# 
+#query bad = literal : S -&gt; T {
+#	entity Employee -&gt; {from
+#		v : Employee
+#	attributes
+#		first -&gt; v.first
+#	foreign_keys
+#		manager -&gt; {v -&gt; v.manager}
+#		worksIn -&gt; {v -&gt; v.worksIn}
+#	}
+#
+#	entity Department -&gt; {from
+#		v : Department
+#	attributes
+#		name -&gt; v.name
+#	foreign_keys
+#		secretary -&gt; {v -&gt; v.secretary}
+#	}
+#} 
+
+query good1 = literal : S -&gt; T {
+	entity Employee -&gt; {from
+		e : Employee
+	where
+		e.manager = e
+		e.worksIn.secretary = e
+	attributes
+		first -&gt; e.first
+	foreign_keys
+		manager -&gt; {e -&gt; e.manager}
+		worksIn -&gt; {d -&gt; e.worksIn}
+	}
+
+	entity Department -&gt; {from
+		d : Department
+	where
+		d.secretary.worksIn = d
+		d.secretary.manager = d.secretary
+	attributes
+		name -&gt; d.name
+	foreign_keys
+		secretary -&gt; {e -&gt; d.secretary}
+	}
+}
+
+instance I = literal : S {
+	generators
+		101 102 103 : Employee
+		2 10 : Department
+	multi_equations
+		manager   -&gt; {101 103, 102 102, 103 103}
+		worksIn   -&gt; {101 10, 102 2, 103 10}
+		secretary -&gt; {10 101, 2 102}
+ 		first 	-&gt; {101 Alan, 102 Camille, 103 Audrey}
+     	name 	-&gt; {10 "Applied Math", 2 "Pure Math"}
+}
+
+instance J = eval good1 I
+</pre> Keywords:<br/></br>			<a href="queryquery_literal.html" >query_literal</a><br />
+			<a href="schemaschema_literal.html" >schema_literal</a><br />
+			<a href="typesidetypeside_literal.html" >typeside_literal</a><br />
+			<a href="instanceeval.html" >eval</a><br />
+			<a href="instanceinstance_literal.html" >instance_literal</a><br />
+<br/>Options:<br/></br>
+<br/></br>
+<hr/><h3>instance I</h3><div><table id="table660" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Department</b></caption><tr><th onclick="sortTable('table660', 0)">ID</th><th onclick="sortTable('table660', 1)">name</th><th onclick="sortTable('table660', 2)">secretary</th></tr><tr><td>0</td><td>Applied Math</td><td>2</td></tr><tr><td>1</td><td>Pure Math</td><td>4</td></tr></table><table id="table661" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Employee</b></caption><tr><th onclick="sortTable('table661', 0)">ID</th><th onclick="sortTable('table661', 1)">first</th><th onclick="sortTable('table661', 2)">manager</th><th onclick="sortTable('table661', 3)">worksIn</th></tr><tr><td>2</td><td>Alan</td><td>3</td><td>0</td></tr><tr><td>3</td><td>Audrey</td><td>3</td><td>0</td></tr><tr><td>4</td><td>Camille</td><td>4</td><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance J</h3><div><table id="table662" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Department</b></caption><tr><th onclick="sortTable('table662', 0)">ID</th><th onclick="sortTable('table662', 1)">name</th><th onclick="sortTable('table662', 2)">secretary</th></tr><tr><td>0</td><td>Pure Math</td><td>1</td></tr></table><table id="table663" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Employee</b></caption><tr><th onclick="sortTable('table663', 0)">ID</th><th onclick="sortTable('table663', 1)">first</th><th onclick="sortTable('table663', 2)">manager</th><th onclick="sortTable('table663', 3)">worksIn</th></tr><tr><td>1</td><td>Camille</td><td>1</td><td>0</td></tr></table></div><br style="clear:both;"/></body></html>

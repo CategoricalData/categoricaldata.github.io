@@ -1,0 +1,133 @@
+<!DOCTYPE HTML>
+<html  lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CD4ENCFV58"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-64DRFX06T1"></script>
+<script >
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-64DRFX06T1');
+</script>
+<title>CQL</title>
+<link rel="shortcut icon" href="../favicon.ico" >
+<link rel="StyleSheet" href="css/nstyle.css" type="text/css" media="all" > 
+<meta charset="utf-8">
+<meta name="keywords" content="CQL,SQL,Data Integration, Data Migration, Category Theory, ETL" >
+<meta name="description" content="Conexus CQL" >
+<meta name="keywords" content="CQL, functorial, category theory, data integration, data migration, categorical databases, SQL, categorical query language" >
+</head>
+<body>
+<div id="content">
+<h1>Categorical Databases<img src="logo.png" height="32" style="float: right;" alt="logo" ></h1>
+<a href="https://categoricaldata.net">Home</a> | 
+<a href="download.html">Download</a> | 
+<a href="examples.html">Getting Started</a> | 
+<a href="help/index.html" target="_blank">Manual</a> |
+<a href="https://github.com/CategoricalData/CQL/wiki" target="_blank">Wiki</a> |
+<a href="papers.html">Papers</a> |
+<a href="screens.html">Screen Shots</a> |
+<a href="https://github.com/categoricalData" target="_blank">Github</a> |
+<a href="https://groups.google.com/forum/#!forum/categoricaldata" target="_blank">Google Group</a> |
+<a href="https://conexus.com" target="_blank">Conexus</a> |
+<a href="mailto:info@conexus.com">Contact</a> 
+<br><br>
+<hr>
+					<h2>Transparent Joins</h2> 
+					
+					<p>Many data integration tasks require large numbers of joins.  In addition to being a potential performance bottleneck, large joins are difficult to write and debug; a single missing condition in a where clause can cause a query to return an incorrect result.  In CQL, foreign keys can be followed (dereferenced) directly, so that many constuctions that require joins in SQL do not require joins in CQL. 
+					</p>
+					<p>This example (built in to the IDE with name Joinless) defines a source schema about schools, faculty, and departments, and a query to find everyone who works in a school whose largest department is mathematics.  The query does not require any joins; in SQL, this query would require two joins.	
+					</p>
+					
+					<p>We start by defining a source schema for schools, faculty, and departments, with foreign keys specifying the department and institute of each person, and the biggest department in a school:
+					</p>
+					
+<pre>typeside Ty = literal { 
+	java_types
+		String = "java.lang.String"
+	java_constants
+		String = "return input[0]"
+}
+
+schema Schools = literal : Ty {
+	entities 
+		Person
+		School
+		Dept
+	foreign_keys
+		instituteOf : Person -> School 
+		deptOf      : Person -> Dept
+		biggestDept : School -> Dept
+	attributes
+		lastName    : Person -> String
+		schoolName  : School -> String
+		deptName    : Dept   -> String
+}
+</pre>
+
+<br >
+					<p>Here is some sample data, taken from the Boston area:
+					</p>
+				
+<pre>instance BostonSchools = literal : Schools {
+	generators 
+		ryan david adam greg gregory jason : Person
+		harvard mit : School
+		math cs : Dept
+	multi_equations 
+		lastName -> {ryan Wisnesky, david Spivak, adam Chlipala, greg Morrisett, 
+					 gregory Malecha, jason Gross}
+		schoolName -> {harvard Harvard, mit MIT}
+		deptName -> {math Mathematics, cs CompSci}
+		instituteOf -> {ryan harvard, david mit, adam mit, greg harvard, 
+			            gregory harvard, jason mit}
+		deptOf -> {ryan math, david math, adam cs, greg cs, gregory cs, jason cs}
+		biggestDept -> {harvard math, mit cs}
+}
+</pre>
+
+<img src="images/examples/joinless2.png" alt="joinless1" width="700" >
+<br >
+
+					<p>Our goal is to find all people who work in a school whose biggest department is mathematics.  The target schema contains an entity Person and two attributes:
+					</p>
+				
+<pre>schema Person = literal : Ty {
+	entities 
+		Person
+	attributes
+		lastName   : Person -> String
+		schoolName : Person -> String
+}</pre>
+
+<br >
+					<p>To populate this schema we write a query that iterates over all people, dereferencing foreign keys (using the dot operator) instead of performing joins:   
+					</p>
+				
+<pre>query BiggestDeptIsMathQuery = literal : Schools -> Person {
+	entities
+		Person -> {	from p:Person
+				 	where p.instituteOf.biggestDept.deptName = Mathematics
+				 	return lastName -> p.lastName 
+			  			   schoolName -> p.instituteOf.schoolName}
+}
+
+instance BiggestDeptIsMathInBoston = eval BiggestDeptIsMathQuery BostonSchools
+</pre>
+
+<br >
+				<p>The result is displayed in the IDE:
+				</p>
+				<img src="images/examples/joinless3.png" alt="joinless2" width="700" >
+
+<p>A screen shot of the entire development is shown below:</p>
+<img src="images/examples/joinless1.png" alt="joinless" width="700" >
+
+			
+	</div><!--close main-->
+	 
+</body>
+</html>

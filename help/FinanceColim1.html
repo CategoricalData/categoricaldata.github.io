@@ -1,0 +1,573 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example FinanceColim1</h1><pre>
+####################################
+# Financial Data Warehousing
+
+typeside Ty = literal {
+	external_types
+		Integer -&gt; "java.lang.Integer"
+		String -&gt; "java.lang.String"
+		Double -&gt; "java.lang.Double"
+		Boolean -&gt; "java.lang.String"
+		Date -&gt; "java.lang.String"
+	external_parsers
+		Integer -&gt; "parseInt;"
+		String -&gt; "x =&gt; x"
+		Double -&gt; "x =&gt; java.lang.Double.parseDouble(x)"
+		Boolean -&gt; "x =&gt; x"
+		Date -&gt; "x =&gt; x"
+	external_functions
+		keygen : Integer,Integer,Integer -&gt; Integer = "(x, y, z) =&gt; (2^x * 3^y * 5^z)"
+}
+
+####################################
+
+schema Client = literal : Ty {
+	entities
+		client
+	attributes
+		id : client -&gt; Integer
+		name description : client -&gt; String
+}
+
+instance ClientInstance = literal : Client {
+     generators
+     	cc1 cc2 cc3 : client
+     multi_equations
+     	id -&gt; {cc1 1, cc2 2, cc3 3}
+     	name -&gt; {cc1 Tom, cc2 Dick, cc3 Harry}
+     	description -&gt; {cc1 "Tom Client", cc2 "Dick Client", cc3 "Harry Client"}
+}
+
+####################################
+
+schema Portfolio = literal : Ty {
+	entities
+		strategy
+		portfolio
+	foreign_keys
+		strategy : portfolio -&gt; strategy
+		parent : portfolio -&gt; portfolio
+	path_equations
+		portfolio.parent.parent = portfolio.parent
+	attributes
+		id : strategy -&gt; Integer
+		name description : strategy -&gt; String
+		id : portfolio -&gt; Integer
+		name description : portfolio -&gt; String
+		client_id strategy_id parent_id : portfolio -&gt; Integer
+	observation_equations
+		forall p. p.strategy.id = p.strategy_id
+		forall p. p.parent.id = p.parent_id
+}
+
+instance PortfolioInstance = literal : Portfolio {
+    generators
+     	ps1 ps2 ps3 : strategy
+     	pp1 pp2 pp3 : portfolio
+	multi_equations
+		parent_id -&gt; {pp1 1, pp2 2, pp3 2}
+		parent -&gt; {pp1 pp1, pp2 pp2, pp3 pp2}
+		id -&gt; {ps1 1, ps2 2, ps3 3, pp1 1, pp2 2, pp3 3}
+		name -&gt; {ps1 Strat1, ps2 Strat2, ps3 Strat3, pp1 Port1, pp2 Port2, pp3 Port3}
+		description -&gt; {ps1 Strategy1, ps2 Strategy2, ps3 Strategy3, pp1 Portfolio1, pp2 Portfolio2, pp3 Portfolio3}
+		strategy_id -&gt; {pp1 2, pp2 2, pp3 1}
+		client_id -&gt; {pp1 1, pp2 2, pp3 2}
+		strategy -&gt; {pp1 ps2, pp2 ps2, pp3 ps1}
+}
+
+####################################
+
+schema Ref = literal : Ty {
+	entities
+		country
+		currency
+		asset
+		strategy
+	foreign_keys
+		country : currency -&gt; country
+		strategy : asset -&gt; strategy
+	attributes
+		id : country -&gt; Integer
+		code name : country -&gt; String
+		id strategy_id : asset -&gt; Integer
+		name description : asset -&gt; String
+		id : strategy -&gt; Integer
+		name description : strategy -&gt; String
+		id country_id : currency -&gt; Integer
+		code name : currency -&gt; String
+	observation_equations
+		forall c. c.country.id = c.country_id
+		forall a. a.strategy.id = a.strategy_id
+}
+
+instance RefInstance = literal : Ref {
+     generators
+     	rcty1 rcty2 rcty3 rcty4 rcty5 rcty6 : country
+		rcur1 rcur2 rcur3 : currency
+		ra1 ra2 ra3 ra4 ra5 ra6 ra7 ra8 ra9 ra10 : asset
+		rs1 rs2 rs3 rs4 rs5 : strategy
+	multi_equations
+		country -&gt; {rcur1 rcty6, rcur2 rcty4, rcur3 rcty5}
+		country_id  -&gt; {rcur1 6, rcur2 4, rcur3 5}
+		strategy -&gt; {ra1 rs1, ra2 rs3, ra3 rs2, ra4 rs4, ra5 rs5, ra6 rs4, ra7 rs4, ra8 rs5, ra9 rs3, ra10 rs1}
+		strategy_id  -&gt; {ra1 1, ra2 3, ra3 2, ra4 4, ra5 5, ra6 4, ra7 4, ra8 5, ra9 3, ra10 1}
+		id  -&gt; {rcty1 1, rcty2 2, rcty3 3, rcty4 4, rcty5 5, rcty6 6, rcur1 1, rcur2 2, rcur3 3, ra1 1, ra2 2, ra3 3, ra4 4, ra5 5, ra6 6, ra7 7, ra8 8, ra9 9, ra10 10, rs1 1, rs2 2, rs3 3, rs4 4, rs5 5}
+		code  -&gt; {rcty1 AU, rcty2 CH, rcty3 CN, rcty4 EU, rcty5 JP, rcty6 US, rcur1 USD, rcur2 EUR, rcur3 JPY}
+		name  -&gt; {ra1 A1, ra2 A2, ra3 A3, ra4 A4, ra5 A5, ra6 A6, ra7 A7, ra8 A8, ra9 A9, ra10 A10, rs1 Strat1, rs2 Strat2, rs3 Strat3, rs4 Strat4, rs5 Strat5, rcty1 Australia, rcty2 Switzerland, rcty3 China, rcty4 "European Union", rcty5 Japan, rcty6 "United States of America", rcur1 "US Dollar", rcur2 "Euro", rcur3 "Japanese Yen" }
+		description  -&gt; {ra1 Asset1, ra2 Asset2, ra3 Asset3, ra4 Asset4, ra5 Asset5, ra6 Asset6, ra7 Asset7, ra8 Asset8, ra9 Asset9, ra10 Asset10, rs1 Strategy1, rs2 Strategy2, rs3 Strategy3, rs4 Strategy4, rs5 Strategy5}
+}
+
+####################################
+
+schema Trans = literal : Ty {
+	entities
+		asset
+		currency
+		transaction
+	foreign_keys
+		asset : transaction -&gt; asset
+		currency : transaction -&gt; currency
+	attributes
+		id : asset -&gt; Integer
+		name description : asset -&gt; String
+		id : currency -&gt; Integer
+		code name : currency -&gt; String
+		id asset_id portfolio_id quantity currency_id : transaction -&gt; Integer
+		date  : transaction -&gt; Date	# added as a new column
+		buy_sell_ind : transaction -&gt; Boolean
+		price : transaction -&gt; Double
+	observation_equations
+		forall t. t.asset.id = t.asset_id
+		forall t. t.currency.id = t.currency_id
+}
+
+instance TransInstance = literal : Trans {
+     generators
+		ta1 ta3 ta5 ta7 ta9 : asset
+		tc1 tc2 tc3 : currency
+		tt1 tt2 tt3 tt4 tt5 tt6 : transaction
+	multi_equations
+		id -&gt; {ta1 1, ta3 3, ta5 5, ta7 7, ta9 9, tc1 1, tc2 2, tc3 3, tt1 1, tt2 2, tt3 3, tt4 4, tt5 5, tt6 6}
+		name -&gt; {ta1 A1, ta3 A3, ta5 A5, ta7 A7, ta9 A9, tc1 "US Dollar", tc2 Euro, tc3 "Japanese Yen"}
+		description -&gt; {ta1 Asset1, ta3 Asset3, ta5 Asset5, ta7 Asset7, ta9 Asset9}
+		code -&gt; {tc1 USD, tc2 EUR, tc3 JPY}
+		asset -&gt; {tt1 ta1, tt2 ta1, tt3 ta3, tt4 ta3, tt5 ta5, tt6 ta5}
+		asset_id -&gt; {tt1 1, tt2 1, tt3 3, tt4 3, tt5 5, tt6 5}
+		portfolio_id -&gt; {tt1 1, tt2 1, tt3 2, tt4 2, tt5 3, tt6 3}
+		buy_sell_ind -&gt; {tt1 buy, tt2 sell, tt3 buy, tt4 sell, tt5 buy, tt6 sell}
+		quantity -&gt; {tt1 200, tt2 100, tt3 150, tt4 150, tt5 200, tt6 100}
+		price -&gt; {tt1 "5.51", tt2 "5.5", tt3 "2.5", tt4 "3.5", tt5 "1.6", tt6 "1.5"}
+		date -&gt; {tt1 "1/1/2011", tt2 "6/1/2011", tt3 "9/1/2013", tt4 "3/1/2014", tt5 "2/1/2013", tt6 "7/1/2013"}
+		currency -&gt; {tt1 tc2, tt2 tc2, tt3 tc1, tt4 tc1, tt5 tc3, tt6 tc3}
+		currency_id -&gt; {tt1 2, tt2 2, tt3 1, tt4 1, tt5 3, tt6 3}
+}
+
+####################################
+
+schema HoldPos = literal : Ty {
+	entities
+		client
+		holding
+		position
+	foreign_keys
+		client : holding -&gt; client
+		client : position -&gt; client
+	attributes
+		no : client -&gt; Integer	# new name
+		nm desc : client -&gt; String	# new name
+		id client_no portfolio_id asset_id quantity : holding -&gt; Integer
+		purchase_date begin_date end_date : holding -&gt; Date
+		purchase_price : holding -&gt; Double
+		currency_code : holding -&gt; String	# switched from _id to _code
+		id client_no asset_id quantity current_value cost_basis : position -&gt; Integer	# new name
+		current_value_currency_code cost_basis_currency_code : position -&gt; String	# switched from _id to _code
+	observation_equations
+		forall h:holding. h.client.no = h.client_no
+		forall p:position. p.client.no = p.client_no
+}
+
+instance HoldPosInstance = literal : HoldPos {
+    generators
+  		hpc1 hpc2 : client
+		hph1 hph2 hph3 hph4 hph5 : holding
+		hpp1 hpp2 : position
+	multi_equations
+		no -&gt; {hpc1 1, hpc2 2}
+		nm -&gt; {hpc1 Tom, hpc2 Dick}
+		desc -&gt; {hpc1 "Tom Client", hpc2 "Dick Client"}
+		id -&gt; {hph1 1, hph2 2, hph3 3, hph4 4, hph5 5, hpp1 1, hpp2 2}
+		client_no -&gt; {hph1 1, hph2 1, hph3 2, hph4 2, hph5 2, hpp1 1, hpp2 2}
+		client -&gt; {hph1 hpc1, hph2 hpc1, hph3 hpc2, hph4 hpc2, hph5 hpc2, hpp1 hpc1, hpp2 hpc2}
+		portfolio_id -&gt; {hph1 1, hph2 1, hph3 3, hph4 3, hph5 3}
+		asset_id -&gt; {hph1 1, hph2 1, hph3 3, hph4 5, hph5 5}
+		quantity -&gt; {hph1 200, hph2 100, hph3 150, hph4 200, hph5 100, hpp1 100, hpp2 100}
+		purchase_date -&gt; {hph1 "1/1/2011", hph2 "1/1/2011", hph3 "9/1/2013", hph4 "2/1/2013", hph5 "2/1/2013"}
+		begin_date -&gt; {hph1 "1/1/2011", hph2 "6/1/2011", hph3 "9/1/2013", hph4 "2/1/2013", hph5 "7/1/2013"}
+		end_date -&gt; {hph1 "6/1/2011", hph3 "3/1/2014", hph4 "7/1/2013"}
+		purchase_price -&gt; {hph1 "5.51", hph2 "5.1", hph3 "2.5", hph4 "1.6", hph5 "1.6"}
+		currency_code -&gt; {hph1 EUR, hph2 EUR, hph3 JPY, hph4 USD, hph5 USD}
+		asset_id -&gt; {hpp1 1, hpp2 5}
+		current_value -&gt; {hpp1 550, hpp2 170}
+		cost_basis -&gt; {hpp1 551, hpp2 160}
+		current_value_currency_code -&gt; {hpp1 EUR, hpp2 JPY}
+		cost_basis_currency_code -&gt; {hpp1 EUR, hpp2 JPY}
+}
+
+####################################
+
+schema_colimit Colimit = quotient Client + Ref + Trans + Portfolio + HoldPos : Ty {
+	 entity_equations
+		Client.client = HoldPos.client
+		Ref.asset     = Trans.asset
+		Ref.currency  = Trans.currency
+		Ref.strategy  = Portfolio.strategy
+	observation_equations
+		forall x. x.Client_client_id          = x.HoldPos_client_no
+		forall x. x.Client_client_name        = x.HoldPos_client_nm
+		forall x. x.Client_client_description = x.HoldPos_client_desc
+
+		forall x. x.Ref_strategy_id          = x.Portfolio_strategy_id
+		forall x. x.Ref_strategy_name        = x.Portfolio_strategy_name
+		forall x. x.Ref_strategy_description = x.Portfolio_strategy_description
+
+		forall x. x.Ref_asset_id          = x.Trans_asset_id
+		forall x. x.Ref_asset_name        = x.Trans_asset_name
+		forall x. x.Ref_asset_description = x.Trans_asset_description
+
+		forall x. x.Ref_currency_id   = x.Trans_currency_id
+		forall x. x.Ref_currency_code = x.Trans_currency_code
+		forall x. x.Ref_currency_name = x.Trans_currency_name
+	options
+		simplify_names=false
+}
+
+instance ClientFwd = sigma (getMapping Colimit Client) ClientInstance
+instance PortfolioFwd = sigma (getMapping Colimit Portfolio) PortfolioInstance
+instance RefFwd = sigma (getMapping Colimit Ref) RefInstance
+instance TransFwd = sigma (getMapping Colimit Trans) TransInstance
+instance HoldPosFwd = sigma (getMapping Colimit HoldPos) HoldPosInstance
+
+instance CoProd = coproduct ClientFwd + PortfolioFwd + RefFwd + TransFwd + HoldPosFwd : getSchema Colimit
+
+####################################
+
+instance E = quotient_query CoProd {
+	entity Client_client -&gt; {
+		from
+			a:Client_client b:Client_client
+		where
+			a.Client_client_id = b.HoldPos_client_no
+	}
+	entity Ref_asset -&gt; {
+		from
+			a:Ref_asset b:Ref_asset
+		where
+			a.Ref_asset_id = b.Trans_asset_id
+	}
+	entity Ref_currency -&gt; {
+		from
+			a:Ref_currency b:Ref_currency
+		where
+			a.Ref_currency_id = b.Trans_currency_id
+	}
+	entity Ref_strategy -&gt; {
+		from
+			a:Ref_strategy b:Ref_strategy
+		where
+			a.Portfolio_strategy_id = b.Ref_strategy_id
+	}
+
+	options
+		quotient_use_chase = false
+}
+
+####################################
+
+schema Target = literal : Ty {
+	entities
+		currency #Trans Ref
+		strategy #Portfolio Ref
+		asset #Trans Ref
+		transaction #Trans
+		client #HoldPos
+		position #HoldPos
+		country #Ref
+		portfolioholding #NEW
+		portfolio #Portfolio
+		holding #HoldPos
+
+	foreign_keys
+		portfolio_strategy : portfolio -&gt; strategy #Portfolio
+		parent : portfolio -&gt; portfolio
+
+		position_client : position -&gt; client #HoldPos
+		position_asset : position -&gt; asset #NEW
+		position_current_value_currency : position -&gt; currency #NEW
+		position_cost_basis_currency : position -&gt; currency #NEW
+
+		asset_strategy : asset -&gt; strategy #Ref
+
+		currency_country : currency -&gt; country #Ref
+
+		transaction_currency : transaction -&gt; currency #Trans
+		transaction_asset : transaction -&gt; asset #Trans
+		transaction_portfolio : transaction -&gt; portfolio #NEW
+
+		holding_currency : holding -&gt; currency #NEW
+		holding_asset : holding -&gt; asset
+
+		portfolioholding_holding : portfolioholding -&gt; holding #NEW
+		portfolioholding_client : portfolioholding -&gt; client #NEW
+		portfolioholding_portfolio : portfolioholding -&gt; portfolio #NEW
+
+	path_equations
+		portfolio.parent.parent = portfolio.parent
+
+	attributes
+		code : currency -&gt; String #Trans Ref
+		name : currency -&gt; String #Trans Ref
+		id : currency -&gt; Integer #Ref
+		country_id : currency -&gt; Integer #Ref
+
+		code : country -&gt; String #Ref
+		name : country -&gt; String #Ref
+		id : country -&gt; Integer #Ref
+
+		id : asset -&gt; Integer #Trans Ref
+		description : asset -&gt; String #Trans Ref
+		name : asset -&gt; String #Trans Ref
+		strategy_id : asset -&gt; Integer #Ref
+
+		name : strategy -&gt; String #Ref Portfolio
+		description : strategy -&gt; String #Ref Portfolio
+		id : strategy -&gt; Integer #Ref Portfolio
+
+		name : portfolio -&gt; String #Portfolio
+		description : portfolio -&gt; String #Portfolio
+		id : portfolio -&gt; Integer #Portfolio
+		strategy_id : portfolio -&gt; Integer #Portfolio
+		parent_portfolio_id : portfolio -&gt; Integer	#Portfolio ADDED
+
+		quantity : position -&gt; Integer #HoldPos
+		current_value : position -&gt; Integer #HoldPos
+		cost_basis : position -&gt; Integer #HoldPos
+		id : position -&gt; Integer #HoldPos
+		client_id : position -&gt; Integer #HoldPos
+		asset_id : position -&gt; Integer #HoldPos
+		current_value_currency_id : position -&gt; Integer # HoldPos
+		cost_basis_currency_id : position -&gt; Integer # HoldPos
+
+		id : holding -&gt; Integer #HoldPos
+		asset_id : holding -&gt; Integer #HoldPos
+		currency_id : holding -&gt; Integer #HoldPos
+		purchase_price : holding -&gt; Double #HoldPos
+		quantity : holding -&gt; Integer #HoldPos #HoldPos
+		purchase_date : holding -&gt; Date #HoldPos
+		begin_date : holding -&gt; Date #HoldPos new attribute
+		end_date : holding -&gt; Date #HoldPos new attribute
+
+		description : client -&gt; String #HoldPos
+		name : client -&gt; String #HoldPos
+		id : client -&gt; Integer #HoldPos
+
+		id : transaction -&gt; Integer #Trans
+		asset_id : transaction -&gt; Integer #Trans
+		buy_sell_ind : transaction -&gt; Boolean #Trans
+		quantity : transaction -&gt; Integer #Trans
+		price : transaction -&gt; Double #Trans
+		currency_id : transaction -&gt; Integer #Trans
+		portfolio_id : transaction -&gt; Integer #Trans
+		date : transaction -&gt; Date	#added as a new column
+
+		id : portfolioholding -&gt; Integer #NEW todo: talk to Jee about this
+		holding_id : portfolioholding -&gt; Integer #NEW
+		client_id : portfolioholding -&gt; Integer #NEW
+		portfolio_id : portfolioholding -&gt; Integer #NEW
+
+	observation_equations
+		forall p. p.parent.id = p.parent_portfolio_id #added
+		forall p. p.portfolio_strategy.id = p.strategy_id
+		forall a. a.asset_strategy.id = a.strategy_id
+		forall p. p.position_client.id = p.client_id
+		forall c. c.currency_country.id = c.country_id
+		forall t. t.transaction_currency.id = t.currency_id
+		forall t. t.transaction_asset.id = t.asset_id
+		forall p. p.portfolioholding_holding.id = p.holding_id
+		forall p. p.portfolioholding_client.id = p.client_id
+		forall p. p.portfolioholding_portfolio.id = p.portfolio_id
+		forall p. p.position_asset.id = p.asset_id
+		forall h. h.holding_currency.id = h.currency_id
+		forall t. t.transaction_portfolio.id = t.portfolio_id
+		forall p. p.position_current_value_currency.id = p.current_value_currency_id
+		forall p. p.position_cost_basis_currency.id = p.cost_basis_currency_id
+}
+
+####################################
+
+query ETL = literal : getSchema Colimit -&gt; Target {
+ entity currency -&gt; {
+ 		from
+ 			c:Ref_currency
+		attributes
+			code -&gt; c.Ref_currency_code
+			name -&gt; c.Ref_currency_name
+			id -&gt; c.Ref_currency_id
+			country_id -&gt; c.Ref_currency_country_id
+		foreign_keys
+		 	currency_country -&gt; {c -&gt; c.Ref_currency_country}
+}
+
+entity strategy -&gt; {
+		from
+			s:Ref_strategy
+		attributes
+			name -&gt; s.Ref_strategy_name
+			description -&gt; s.Ref_strategy_description
+			id -&gt; s.Ref_strategy_id
+	}
+
+entity	asset -&gt; {
+		from
+			a:Ref_asset
+		attributes
+			id -&gt; a.Ref_asset_id
+			description -&gt; a.Ref_asset_description
+			name -&gt; a.Ref_asset_name
+			strategy_id -&gt; a.Ref_asset_strategy_id
+		foreign_keys
+		 	asset_strategy -&gt; {s -&gt; a.Ref_asset_strategy}
+	}
+
+entity	client -&gt; {
+		from
+			c:Client_client
+		attributes
+			description -&gt; c.Client_client_description
+			name -&gt; c.Client_client_name
+			id -&gt; c.Client_client_id
+	}
+
+entity	country -&gt; {
+		from
+			c:Ref_country
+		attributes
+			code -&gt; c.Ref_country_code
+			name -&gt; c.Ref_country_name
+			id -&gt; c.Ref_country_id
+	}
+
+entity	transaction -&gt; {
+		from
+			t:Trans_transaction p:Portfolio_portfolio c:Client_client c1:Client_client
+		where
+			t.Trans_transaction_portfolio_id = p.Portfolio_portfolio_id
+		attributes
+			id -&gt; t.Trans_transaction_id
+			asset_id -&gt; t.Trans_transaction_asset_id
+			buy_sell_ind -&gt; t.Trans_transaction_buy_sell_ind
+			quantity -&gt; t.Trans_transaction_quantity
+			price -&gt; t.Trans_transaction_price
+			date -&gt; t.Trans_transaction_date
+			currency_id -&gt; t.Trans_transaction_currency_id
+			portfolio_id -&gt; t.Trans_transaction_portfolio_id
+		foreign_keys
+			transaction_currency -&gt; {c -&gt; t.Trans_transaction_currency}
+			transaction_asset -&gt; {a -&gt; t.Trans_transaction_asset}
+			transaction_portfolio -&gt; {p -&gt; p} 	#NEW
+	}
+
+entity	position -&gt; {
+		from
+			p:HoldPos_position a:Ref_asset cv:Ref_currency cb:Ref_currency
+		where
+			p.HoldPos_position_asset_id = a.Ref_asset_id
+			p.HoldPos_position_current_value_currency_code = cv.Ref_currency_code
+			p.HoldPos_position_cost_basis_currency_code = cb.Ref_currency_code
+		attributes
+			quantity -&gt; p.HoldPos_position_quantity
+			current_value -&gt; p.HoldPos_position_current_value
+			cost_basis -&gt; p.HoldPos_position_cost_basis
+			id -&gt; p.HoldPos_position_id
+			client_id -&gt; p.HoldPos_position_client_no
+			asset_id -&gt; p.HoldPos_position_asset_id
+			current_value_currency_id -&gt; cv.Ref_currency_id
+			cost_basis_currency_id -&gt; cb.Ref_currency_id
+ 		foreign_keys
+		 	position_client -&gt; {c -&gt; p.HoldPos_position_client}
+			position_asset -&gt; {a -&gt; a}  #NEW
+			position_current_value_currency -&gt; {c -&gt; cv}  #NEW
+			position_cost_basis_currency -&gt; {c -&gt; cb}  #NEW
+	}
+
+	entity portfolio -&gt; {
+		from
+			p:Portfolio_portfolio
+		attributes
+			parent_portfolio_id -&gt; p.Portfolio_portfolio_parent_id #added
+			name -&gt; p.Portfolio_portfolio_name
+			description -&gt; p.Portfolio_portfolio_description
+			id -&gt; p.Portfolio_portfolio_id
+			strategy_id -&gt; p.Portfolio_portfolio_strategy_id
+		foreign_keys
+ 			parent -&gt; {p -&gt; p.Portfolio_portfolio_parent}  #added
+			portfolio_strategy -&gt; {s -&gt; p.Portfolio_portfolio_strategy}
+	}
+
+	entity holding -&gt; {
+		from
+			h:HoldPos_holding c:Ref_currency a:Ref_asset
+		where
+			a.Ref_asset_id = h.HoldPos_holding_asset_id
+			h.HoldPos_holding_currency_code = c.Ref_currency_code
+		attributes
+			id -&gt; h.HoldPos_holding_id
+			asset_id -&gt; h.HoldPos_holding_asset_id
+			currency_id -&gt; c.Ref_currency_id
+			purchase_price -&gt; h.HoldPos_holding_purchase_price
+			quantity -&gt; h.HoldPos_holding_quantity
+			purchase_date -&gt; h.HoldPos_holding_purchase_date
+			begin_date -&gt; h.HoldPos_holding_begin_date
+			end_date -&gt; h.HoldPos_holding_end_date
+		foreign_keys
+ 			holding_asset -&gt; {a -&gt; a}
+			holding_currency -&gt; {c -&gt; c}
+	}
+
+entity	portfolioholding -&gt; {
+		from
+			h:HoldPos_holding p:Portfolio_portfolio cur: Ref_currency c1:Client_client a:Ref_asset
+		where
+			a.Ref_asset_id = h.HoldPos_holding_asset_id
+			p.Portfolio_portfolio_parent.Portfolio_portfolio_client_id = c1.Client_client_id
+			c1.Client_client_id = h.HoldPos_holding_client.Client_client_id
+			h.HoldPos_holding_currency_code = cur.Ref_currency_code
+			p.Portfolio_portfolio_client_id = h.HoldPos_holding_client.Client_client_id
+			h.HoldPos_holding_portfolio_id = p.Portfolio_portfolio_id
+		attributes
+			id -&gt; keygen(h.HoldPos_holding_id, h.HoldPos_holding_client.Client_client_id, p.Portfolio_portfolio_id) #added by ryan
+			holding_id -&gt; h.HoldPos_holding_id
+			client_id -&gt; c1.Client_client_id
+			portfolio_id -&gt; p.Portfolio_portfolio_id
+		foreign_keys
+			portfolioholding_holding -&gt; {h -&gt; h c -&gt; cur a -&gt; a}
+			portfolioholding_client -&gt; {c -&gt; h.HoldPos_holding_client}
+			portfolioholding_portfolio -&gt; {p -&gt; p}
+	}
+}
+
+instance Output = distinct eval ETL E
+</pre> Keywords:<br/></br>			<a href="typesidetypeside_literal.html" >typeside_literal</a><br />
+			<a href="instancesigma.html" >sigma</a><br />
+			<a href="instancequotient_query.html" >quotient_query</a><br />
+			<a href="schemaschema_literal.html" >schema_literal</a><br />
+			<a href="schema_colimitquotient.html" >quotient</a><br />
+			<a href="queryquery_literal.html" >query_literal</a><br />
+			<a href="instanceinstance_literal.html" >instance_literal</a><br />
+			<a href="instancedistinct.html" >distinct</a><br />
+			<a href="instancecoproduct.html" >coproduct</a><br />
+<br/>Options:<br/></br><a href="quotient_use_chase.html" >quotient_use_chase</a><br/>
+<a href="simplify_names.html" >simplify_names</a><br/>
+
+<br/></br>
+<hr/><h3>instance ClientInstance</h3><div><table id="table197" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>client</b></caption><tr><th onclick="sortTable('table197', 0)">ID</th><th onclick="sortTable('table197', 1)">id</th><th onclick="sortTable('table197', 2)">name</th><th onclick="sortTable('table197', 3)">description</th></tr><tr><td>0</td><td>1</td><td>Tom</td><td>Tom Client</td></tr><tr><td>1</td><td>2</td><td>Dick</td><td>Dick Client</td></tr><tr><td>2</td><td>3</td><td>Harry</td><td>Harry Client</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance PortfolioInstance</h3><div><table id="table198" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>portfolio</b></caption><tr><th onclick="sortTable('table198', 0)">ID</th><th onclick="sortTable('table198', 1)">id</th><th onclick="sortTable('table198', 2)">name</th><th onclick="sortTable('table198', 3)">description</th><th onclick="sortTable('table198', 4)">client_id</th><th onclick="sortTable('table198', 5)">strategy_id</th><th onclick="sortTable('table198', 6)">parent_id</th><th onclick="sortTable('table198', 7)">parent</th><th onclick="sortTable('table198', 8)">strategy</th></tr><tr><td>0</td><td>1</td><td>Port1</td><td>Portfolio1</td><td>1</td><td>2</td><td>1</td><td>0</td><td>4</td></tr><tr><td>1</td><td>2</td><td>Port2</td><td>Portfolio2</td><td>2</td><td>2</td><td>2</td><td>1</td><td>4</td></tr><tr><td>2</td><td>3</td><td>Port3</td><td>Portfolio3</td><td>2</td><td>1</td><td>2</td><td>1</td><td>3</td></tr></table><table id="table199" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>strategy</b></caption><tr><th onclick="sortTable('table199', 0)">ID</th><th onclick="sortTable('table199', 1)">id</th><th onclick="sortTable('table199', 2)">name</th><th onclick="sortTable('table199', 3)">description</th></tr><tr><td>3</td><td>1</td><td>Strat1</td><td>Strategy1</td></tr><tr><td>4</td><td>2</td><td>Strat2</td><td>Strategy2</td></tr><tr><td>5</td><td>3</td><td>Strat3</td><td>Strategy3</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance ClientFwd</h3><div><table id="table200" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Client_client</b></caption><tr><th onclick="sortTable('table200', 0)">ID</th><th onclick="sortTable('table200', 1)">HoldPos_client_no</th><th onclick="sortTable('table200', 2)">Client_client_name</th><th onclick="sortTable('table200', 3)">HoldPos_client_desc</th><th onclick="sortTable('table200', 4)">Client_client_description</th><th onclick="sortTable('table200', 5)">HoldPos_client_nm</th><th onclick="sortTable('table200', 6)">Client_client_id</th></tr><tr><td>0</td><td>1</td><td>Tom</td><td>Tom Client</td><td>Tom Client</td><td>Tom</td><td>1</td></tr><tr><td>1</td><td>2</td><td>Dick</td><td>Dick Client</td><td>Dick Client</td><td>Dick</td><td>2</td></tr><tr><td>2</td><td>3</td><td>Harry</td><td>Harry Client</td><td>Harry Client</td><td>Harry</td><td>3</td></tr></table><table id="table201" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_holding</b></caption><tr><th onclick="sortTable('table201', 0)">ID</th><th onclick="sortTable('table201', 1)">HoldPos_holding_purchase_date</th><th onclick="sortTable('table201', 2)">HoldPos_holding_portfolio_id</th><th onclick="sortTable('table201', 3)">HoldPos_holding_end_date</th><th onclick="sortTable('table201', 4)">HoldPos_holding_purchase_price</th><th onclick="sortTable('table201', 5)">HoldPos_holding_currency_code</th><th onclick="sortTable('table201', 6)">HoldPos_holding_begin_date</th><th onclick="sortTable('table201', 7)">HoldPos_holding_id</th><th onclick="sortTable('table201', 8)">HoldPos_holding_client_no</th><th onclick="sortTable('table201', 9)">HoldPos_holding_asset_id</th><th onclick="sortTable('table201', 10)">HoldPos_holding_quantity</th><th onclick="sortTable('table201', 11)">HoldPos_holding_client</th></tr></table><table id="table202" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_position</b></caption><tr><th onclick="sortTable('table202', 0)">ID</th><th onclick="sortTable('table202', 1)">HoldPos_position_asset_id</th><th onclick="sortTable('table202', 2)">HoldPos_position_cost_basis</th><th onclick="sortTable('table202', 3)">HoldPos_position_id</th><th onclick="sortTable('table202', 4)">HoldPos_position_cost_basis_currency_code</th><th onclick="sortTable('table202', 5)">HoldPos_position_client_no</th><th onclick="sortTable('table202', 6)">HoldPos_position_quantity</th><th onclick="sortTable('table202', 7)">HoldPos_position_current_value_currency_code</th><th onclick="sortTable('table202', 8)">HoldPos_position_current_value</th><th onclick="sortTable('table202', 9)">HoldPos_position_client</th></tr></table><table id="table203" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Portfolio_portfolio</b></caption><tr><th onclick="sortTable('table203', 0)">ID</th><th onclick="sortTable('table203', 1)">Portfolio_portfolio_strategy_id</th><th onclick="sortTable('table203', 2)">Portfolio_portfolio_parent_id</th><th onclick="sortTable('table203', 3)">Portfolio_portfolio_client_id</th><th onclick="sortTable('table203', 4)">Portfolio_portfolio_description</th><th onclick="sortTable('table203', 5)">Portfolio_portfolio_id</th><th onclick="sortTable('table203', 6)">Portfolio_portfolio_name</th><th onclick="sortTable('table203', 7)">Portfolio_portfolio_parent</th><th onclick="sortTable('table203', 8)">Portfolio_portfolio_strategy</th></tr></table><table id="table204" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_asset</b></caption><tr><th onclick="sortTable('table204', 0)">ID</th><th onclick="sortTable('table204', 1)">Trans_asset_id</th><th onclick="sortTable('table204', 2)">Trans_asset_description</th><th onclick="sortTable('table204', 3)">Ref_asset_name</th><th onclick="sortTable('table204', 4)">Ref_asset_id</th><th onclick="sortTable('table204', 5)">Ref_asset_description</th><th onclick="sortTable('table204', 6)">Trans_asset_name</th><th onclick="sortTable('table204', 7)">Ref_asset_strategy_id</th><th onclick="sortTable('table204', 8)">Ref_asset_strategy</th></tr></table><table id="table205" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_country</b></caption><tr><th onclick="sortTable('table205', 0)">ID</th><th onclick="sortTable('table205', 1)">Ref_country_code</th><th onclick="sortTable('table205', 2)">Ref_country_id</th><th onclick="sortTable('table205', 3)">Ref_country_name</th></tr></table><table id="table206" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_currency</b></caption><tr><th onclick="sortTable('table206', 0)">ID</th><th onclick="sortTable('table206', 1)">Ref_currency_code</th><th onclick="sortTable('table206', 2)">Ref_currency_id</th><th onclick="sortTable('table206', 3)">Ref_currency_name</th><th onclick="sortTable('table206', 4)">Ref_currency_country_id</th><th onclick="sortTable('table206', 5)">Trans_currency_name</th><th onclick="sortTable('table206', 6)">Trans_currency_code</th><th onclick="sortTable('table206', 7)">Trans_currency_id</th><th onclick="sortTable('table206', 8)">Ref_currency_country</th></tr></table><table id="table207" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_strategy</b></caption><tr><th onclick="sortTable('table207', 0)">ID</th><th onclick="sortTable('table207', 1)">Portfolio_strategy_description</th><th onclick="sortTable('table207', 2)">Portfolio_strategy_id</th><th onclick="sortTable('table207', 3)">Ref_strategy_name</th><th onclick="sortTable('table207', 4)">Ref_strategy_id</th><th onclick="sortTable('table207', 5)">Portfolio_strategy_name</th><th onclick="sortTable('table207', 6)">Ref_strategy_description</th></tr></table><table id="table208" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Trans_transaction</b></caption><tr><th onclick="sortTable('table208', 0)">ID</th><th onclick="sortTable('table208', 1)">Trans_transaction_price</th><th onclick="sortTable('table208', 2)">Trans_transaction_currency_id</th><th onclick="sortTable('table208', 3)">Trans_transaction_asset_id</th><th onclick="sortTable('table208', 4)">Trans_transaction_quantity</th><th onclick="sortTable('table208', 5)">Trans_transaction_date</th><th onclick="sortTable('table208', 6)">Trans_transaction_buy_sell_ind</th><th onclick="sortTable('table208', 7)">Trans_transaction_portfolio_id</th><th onclick="sortTable('table208', 8)">Trans_transaction_id</th><th onclick="sortTable('table208', 9)">Trans_transaction_asset</th><th onclick="sortTable('table208', 10)">Trans_transaction_currency</th></tr></table></div><br style="clear:both;"/><hr/><h3>instance HoldPosInstance</h3><div><table id="table209" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>client</b></caption><tr><th onclick="sortTable('table209', 0)">ID</th><th onclick="sortTable('table209', 1)">no</th><th onclick="sortTable('table209', 2)">nm</th><th onclick="sortTable('table209', 3)">desc</th></tr><tr><td>0</td><td>1</td><td>Tom</td><td>Tom Client</td></tr><tr><td>1</td><td>2</td><td>Dick</td><td>Dick Client</td></tr></table><table id="table210" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>holding</b></caption><tr><th onclick="sortTable('table210', 0)">ID</th><th onclick="sortTable('table210', 1)">id</th><th onclick="sortTable('table210', 2)">client_no</th><th onclick="sortTable('table210', 3)">portfolio_id</th><th onclick="sortTable('table210', 4)">asset_id</th><th onclick="sortTable('table210', 5)">quantity</th><th onclick="sortTable('table210', 6)">purchase_date</th><th onclick="sortTable('table210', 7)">begin_date</th><th onclick="sortTable('table210', 8)">end_date</th><th onclick="sortTable('table210', 9)">purchase_price</th><th onclick="sortTable('table210', 10)">currency_code</th><th onclick="sortTable('table210', 11)">client</th></tr><tr><td>2</td><td>1</td><td>1</td><td>1</td><td>1</td><td>200</td><td>1/1/2011</td><td>1/1/2011</td><td>6/1/2011</td><td>5.51</td><td>EUR</td><td>0</td></tr><tr><td>3</td><td>2</td><td>1</td><td>1</td><td>1</td><td>100</td><td>1/1/2011</td><td>6/1/2011</td><td>?0</td><td>5.1</td><td>EUR</td><td>0</td></tr><tr><td>4</td><td>3</td><td>2</td><td>3</td><td>3</td><td>150</td><td>9/1/2013</td><td>9/1/2013</td><td>3/1/2014</td><td>2.5</td><td>JPY</td><td>1</td></tr><tr><td>5</td><td>4</td><td>2</td><td>3</td><td>5</td><td>200</td><td>2/1/2013</td><td>2/1/2013</td><td>7/1/2013</td><td>1.6</td><td>USD</td><td>1</td></tr><tr><td>6</td><td>5</td><td>2</td><td>3</td><td>5</td><td>100</td><td>2/1/2013</td><td>7/1/2013</td><td>?1</td><td>1.6</td><td>USD</td><td>1</td></tr></table><table id="table211" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>position</b></caption><tr><th onclick="sortTable('table211', 0)">ID</th><th onclick="sortTable('table211', 1)">id</th><th onclick="sortTable('table211', 2)">client_no</th><th onclick="sortTable('table211', 3)">asset_id</th><th onclick="sortTable('table211', 4)">quantity</th><th onclick="sortTable('table211', 5)">current_value</th><th onclick="sortTable('table211', 6)">cost_basis</th><th onclick="sortTable('table211', 7)">current_value_currency_code</th><th onclick="sortTable('table211', 8)">cost_basis_currency_code</th><th onclick="sortTable('table211', 9)">client</th></tr><tr><td>7</td><td>1</td><td>1</td><td>1</td><td>100</td><td>550</td><td>551</td><td>EUR</td><td>EUR</td><td>0</td></tr><tr><td>8</td><td>2</td><td>2</td><td>5</td><td>100</td><td>170</td><td>160</td><td>JPY</td><td>JPY</td><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance PortfolioFwd</h3><div><table id="table212" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Client_client</b></caption><tr><th onclick="sortTable('table212', 0)">ID</th><th onclick="sortTable('table212', 1)">HoldPos_client_no</th><th onclick="sortTable('table212', 2)">Client_client_name</th><th onclick="sortTable('table212', 3)">HoldPos_client_desc</th><th onclick="sortTable('table212', 4)">Client_client_description</th><th onclick="sortTable('table212', 5)">HoldPos_client_nm</th><th onclick="sortTable('table212', 6)">Client_client_id</th></tr></table><table id="table213" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_holding</b></caption><tr><th onclick="sortTable('table213', 0)">ID</th><th onclick="sortTable('table213', 1)">HoldPos_holding_purchase_date</th><th onclick="sortTable('table213', 2)">HoldPos_holding_portfolio_id</th><th onclick="sortTable('table213', 3)">HoldPos_holding_end_date</th><th onclick="sortTable('table213', 4)">HoldPos_holding_purchase_price</th><th onclick="sortTable('table213', 5)">HoldPos_holding_currency_code</th><th onclick="sortTable('table213', 6)">HoldPos_holding_begin_date</th><th onclick="sortTable('table213', 7)">HoldPos_holding_id</th><th onclick="sortTable('table213', 8)">HoldPos_holding_client_no</th><th onclick="sortTable('table213', 9)">HoldPos_holding_asset_id</th><th onclick="sortTable('table213', 10)">HoldPos_holding_quantity</th><th onclick="sortTable('table213', 11)">HoldPos_holding_client</th></tr></table><table id="table214" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_position</b></caption><tr><th onclick="sortTable('table214', 0)">ID</th><th onclick="sortTable('table214', 1)">HoldPos_position_asset_id</th><th onclick="sortTable('table214', 2)">HoldPos_position_cost_basis</th><th onclick="sortTable('table214', 3)">HoldPos_position_id</th><th onclick="sortTable('table214', 4)">HoldPos_position_cost_basis_currency_code</th><th onclick="sortTable('table214', 5)">HoldPos_position_client_no</th><th onclick="sortTable('table214', 6)">HoldPos_position_quantity</th><th onclick="sortTable('table214', 7)">HoldPos_position_current_value_currency_code</th><th onclick="sortTable('table214', 8)">HoldPos_position_current_value</th><th onclick="sortTable('table214', 9)">HoldPos_position_client</th></tr></table><table id="table215" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Portfolio_portfolio</b></caption><tr><th onclick="sortTable('table215', 0)">ID</th><th onclick="sortTable('table215', 1)">Portfolio_portfolio_strategy_id</th><th onclick="sortTable('table215', 2)">Portfolio_portfolio_parent_id</th><th onclick="sortTable('table215', 3)">Portfolio_portfolio_client_id</th><th onclick="sortTable('table215', 4)">Portfolio_portfolio_description</th><th onclick="sortTable('table215', 5)">Portfolio_portfolio_id</th><th onclick="sortTable('table215', 6)">Portfolio_portfolio_name</th><th onclick="sortTable('table215', 7)">Portfolio_portfolio_parent</th><th onclick="sortTable('table215', 8)">Portfolio_portfolio_strategy</th></tr><tr><td>0</td><td>2</td><td>1</td><td>1</td><td>Portfolio1</td><td>1</td><td>Port1</td><td>0</td><td>4</td></tr><tr><td>1</td><td>2</td><td>2</td><td>2</td><td>Portfolio2</td><td>2</td><td>Port2</td><td>1</td><td>4</td></tr><tr><td>2</td><td>1</td><td>2</td><td>2</td><td>Portfolio3</td><td>3</td><td>Port3</td><td>1</td><td>3</td></tr></table><table id="table216" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_asset</b></caption><tr><th onclick="sortTable('table216', 0)">ID</th><th onclick="sortTable('table216', 1)">Trans_asset_id</th><th onclick="sortTable('table216', 2)">Trans_asset_description</th><th onclick="sortTable('table216', 3)">Ref_asset_name</th><th onclick="sortTable('table216', 4)">Ref_asset_id</th><th onclick="sortTable('table216', 5)">Ref_asset_description</th><th onclick="sortTable('table216', 6)">Trans_asset_name</th><th onclick="sortTable('table216', 7)">Ref_asset_strategy_id</th><th onclick="sortTable('table216', 8)">Ref_asset_strategy</th></tr></table><table id="table217" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_country</b></caption><tr><th onclick="sortTable('table217', 0)">ID</th><th onclick="sortTable('table217', 1)">Ref_country_code</th><th onclick="sortTable('table217', 2)">Ref_country_id</th><th onclick="sortTable('table217', 3)">Ref_country_name</th></tr></table><table id="table218" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_currency</b></caption><tr><th onclick="sortTable('table218', 0)">ID</th><th onclick="sortTable('table218', 1)">Ref_currency_code</th><th onclick="sortTable('table218', 2)">Ref_currency_id</th><th onclick="sortTable('table218', 3)">Ref_currency_name</th><th onclick="sortTable('table218', 4)">Ref_currency_country_id</th><th onclick="sortTable('table218', 5)">Trans_currency_name</th><th onclick="sortTable('table218', 6)">Trans_currency_code</th><th onclick="sortTable('table218', 7)">Trans_currency_id</th><th onclick="sortTable('table218', 8)">Ref_currency_country</th></tr></table><table id="table219" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_strategy</b></caption><tr><th onclick="sortTable('table219', 0)">ID</th><th onclick="sortTable('table219', 1)">Portfolio_strategy_description</th><th onclick="sortTable('table219', 2)">Portfolio_strategy_id</th><th onclick="sortTable('table219', 3)">Ref_strategy_name</th><th onclick="sortTable('table219', 4)">Ref_strategy_id</th><th onclick="sortTable('table219', 5)">Portfolio_strategy_name</th><th onclick="sortTable('table219', 6)">Ref_strategy_description</th></tr><tr><td>3</td><td>Strategy1</td><td>1</td><td>Strat1</td><td>1</td><td>Strat1</td><td>Strategy1</td></tr><tr><td>4</td><td>Strategy2</td><td>2</td><td>Strat2</td><td>2</td><td>Strat2</td><td>Strategy2</td></tr><tr><td>5</td><td>Strategy3</td><td>3</td><td>Strat3</td><td>3</td><td>Strat3</td><td>Strategy3</td></tr></table><table id="table220" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Trans_transaction</b></caption><tr><th onclick="sortTable('table220', 0)">ID</th><th onclick="sortTable('table220', 1)">Trans_transaction_price</th><th onclick="sortTable('table220', 2)">Trans_transaction_currency_id</th><th onclick="sortTable('table220', 3)">Trans_transaction_asset_id</th><th onclick="sortTable('table220', 4)">Trans_transaction_quantity</th><th onclick="sortTable('table220', 5)">Trans_transaction_date</th><th onclick="sortTable('table220', 6)">Trans_transaction_buy_sell_ind</th><th onclick="sortTable('table220', 7)">Trans_transaction_portfolio_id</th><th onclick="sortTable('table220', 8)">Trans_transaction_id</th><th onclick="sortTable('table220', 9)">Trans_transaction_asset</th><th onclick="sortTable('table220', 10)">Trans_transaction_currency</th></tr></table></div><br style="clear:both;"/><hr/><h3>instance RefInstance</h3><div><table id="table221" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>asset</b></caption><tr><th onclick="sortTable('table221', 0)">ID</th><th onclick="sortTable('table221', 1)">id</th><th onclick="sortTable('table221', 2)">strategy_id</th><th onclick="sortTable('table221', 3)">name</th><th onclick="sortTable('table221', 4)">description</th><th onclick="sortTable('table221', 5)">strategy</th></tr><tr><td>0</td><td>1</td><td>1</td><td>A1</td><td>Asset1</td><td>19</td></tr><tr><td>1</td><td>2</td><td>3</td><td>A2</td><td>Asset2</td><td>20</td></tr><tr><td>2</td><td>3</td><td>2</td><td>A3</td><td>Asset3</td><td>21</td></tr><tr><td>3</td><td>4</td><td>4</td><td>A4</td><td>Asset4</td><td>22</td></tr><tr><td>4</td><td>5</td><td>5</td><td>A5</td><td>Asset5</td><td>23</td></tr><tr><td>5</td><td>6</td><td>4</td><td>A6</td><td>Asset6</td><td>22</td></tr><tr><td>6</td><td>7</td><td>4</td><td>A7</td><td>Asset7</td><td>22</td></tr><tr><td>7</td><td>8</td><td>5</td><td>A8</td><td>Asset8</td><td>23</td></tr><tr><td>8</td><td>9</td><td>3</td><td>A9</td><td>Asset9</td><td>20</td></tr><tr><td>9</td><td>10</td><td>1</td><td>A10</td><td>Asset10</td><td>19</td></tr></table><table id="table222" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>country</b></caption><tr><th onclick="sortTable('table222', 0)">ID</th><th onclick="sortTable('table222', 1)">id</th><th onclick="sortTable('table222', 2)">code</th><th onclick="sortTable('table222', 3)">name</th></tr><tr><td>10</td><td>1</td><td>AU</td><td>Australia</td></tr><tr><td>11</td><td>2</td><td>CH</td><td>Switzerland</td></tr><tr><td>12</td><td>3</td><td>CN</td><td>China</td></tr><tr><td>13</td><td>4</td><td>EU</td><td>European Union</td></tr><tr><td>14</td><td>5</td><td>JP</td><td>Japan</td></tr><tr><td>15</td><td>6</td><td>US</td><td>United States of America</td></tr></table><table id="table223" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>currency</b></caption><tr><th onclick="sortTable('table223', 0)">ID</th><th onclick="sortTable('table223', 1)">id</th><th onclick="sortTable('table223', 2)">country_id</th><th onclick="sortTable('table223', 3)">code</th><th onclick="sortTable('table223', 4)">name</th><th onclick="sortTable('table223', 5)">country</th></tr><tr><td>16</td><td>1</td><td>6</td><td>USD</td><td>US Dollar</td><td>15</td></tr><tr><td>17</td><td>2</td><td>4</td><td>EUR</td><td>Euro</td><td>13</td></tr><tr><td>18</td><td>3</td><td>5</td><td>JPY</td><td>Japanese Yen</td><td>14</td></tr></table><table id="table224" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>strategy</b></caption><tr><th onclick="sortTable('table224', 0)">ID</th><th onclick="sortTable('table224', 1)">id</th><th onclick="sortTable('table224', 2)">name</th><th onclick="sortTable('table224', 3)">description</th></tr><tr><td>19</td><td>1</td><td>Strat1</td><td>Strategy1</td></tr><tr><td>20</td><td>3</td><td>Strat3</td><td>Strategy3</td></tr><tr><td>21</td><td>2</td><td>Strat2</td><td>Strategy2</td></tr><tr><td>22</td><td>4</td><td>Strat4</td><td>Strategy4</td></tr><tr><td>23</td><td>5</td><td>Strat5</td><td>Strategy5</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance HoldPosFwd</h3><div><table id="table225" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Client_client</b></caption><tr><th onclick="sortTable('table225', 0)">ID</th><th onclick="sortTable('table225', 1)">HoldPos_client_no</th><th onclick="sortTable('table225', 2)">Client_client_name</th><th onclick="sortTable('table225', 3)">HoldPos_client_desc</th><th onclick="sortTable('table225', 4)">Client_client_description</th><th onclick="sortTable('table225', 5)">HoldPos_client_nm</th><th onclick="sortTable('table225', 6)">Client_client_id</th></tr><tr><td>0</td><td>1</td><td>Tom</td><td>Tom Client</td><td>Tom Client</td><td>Tom</td><td>1</td></tr><tr><td>1</td><td>2</td><td>Dick</td><td>Dick Client</td><td>Dick Client</td><td>Dick</td><td>2</td></tr></table><table id="table226" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_holding</b></caption><tr><th onclick="sortTable('table226', 0)">ID</th><th onclick="sortTable('table226', 1)">HoldPos_holding_purchase_date</th><th onclick="sortTable('table226', 2)">HoldPos_holding_portfolio_id</th><th onclick="sortTable('table226', 3)">HoldPos_holding_end_date</th><th onclick="sortTable('table226', 4)">HoldPos_holding_purchase_price</th><th onclick="sortTable('table226', 5)">HoldPos_holding_currency_code</th><th onclick="sortTable('table226', 6)">HoldPos_holding_begin_date</th><th onclick="sortTable('table226', 7)">HoldPos_holding_id</th><th onclick="sortTable('table226', 8)">HoldPos_holding_client_no</th><th onclick="sortTable('table226', 9)">HoldPos_holding_asset_id</th><th onclick="sortTable('table226', 10)">HoldPos_holding_quantity</th><th onclick="sortTable('table226', 11)">HoldPos_holding_client</th></tr><tr><td>2</td><td>1/1/2011</td><td>1</td><td>6/1/2011</td><td>5.51</td><td>EUR</td><td>1/1/2011</td><td>1</td><td>1</td><td>1</td><td>200</td><td>0</td></tr><tr><td>3</td><td>1/1/2011</td><td>1</td><td>?0</td><td>5.1</td><td>EUR</td><td>6/1/2011</td><td>2</td><td>1</td><td>1</td><td>100</td><td>0</td></tr><tr><td>4</td><td>9/1/2013</td><td>3</td><td>3/1/2014</td><td>2.5</td><td>JPY</td><td>9/1/2013</td><td>3</td><td>2</td><td>3</td><td>150</td><td>1</td></tr><tr><td>5</td><td>2/1/2013</td><td>3</td><td>7/1/2013</td><td>1.6</td><td>USD</td><td>2/1/2013</td><td>4</td><td>2</td><td>5</td><td>200</td><td>1</td></tr><tr><td>6</td><td>2/1/2013</td><td>3</td><td>?1</td><td>1.6</td><td>USD</td><td>7/1/2013</td><td>5</td><td>2</td><td>5</td><td>100</td><td>1</td></tr></table><table id="table227" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_position</b></caption><tr><th onclick="sortTable('table227', 0)">ID</th><th onclick="sortTable('table227', 1)">HoldPos_position_asset_id</th><th onclick="sortTable('table227', 2)">HoldPos_position_cost_basis</th><th onclick="sortTable('table227', 3)">HoldPos_position_id</th><th onclick="sortTable('table227', 4)">HoldPos_position_cost_basis_currency_code</th><th onclick="sortTable('table227', 5)">HoldPos_position_client_no</th><th onclick="sortTable('table227', 6)">HoldPos_position_quantity</th><th onclick="sortTable('table227', 7)">HoldPos_position_current_value_currency_code</th><th onclick="sortTable('table227', 8)">HoldPos_position_current_value</th><th onclick="sortTable('table227', 9)">HoldPos_position_client</th></tr><tr><td>7</td><td>1</td><td>551</td><td>1</td><td>EUR</td><td>1</td><td>100</td><td>EUR</td><td>550</td><td>0</td></tr><tr><td>8</td><td>5</td><td>160</td><td>2</td><td>JPY</td><td>2</td><td>100</td><td>JPY</td><td>170</td><td>1</td></tr></table><table id="table228" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Portfolio_portfolio</b></caption><tr><th onclick="sortTable('table228', 0)">ID</th><th onclick="sortTable('table228', 1)">Portfolio_portfolio_strategy_id</th><th onclick="sortTable('table228', 2)">Portfolio_portfolio_parent_id</th><th onclick="sortTable('table228', 3)">Portfolio_portfolio_client_id</th><th onclick="sortTable('table228', 4)">Portfolio_portfolio_description</th><th onclick="sortTable('table228', 5)">Portfolio_portfolio_id</th><th onclick="sortTable('table228', 6)">Portfolio_portfolio_name</th><th onclick="sortTable('table228', 7)">Portfolio_portfolio_parent</th><th onclick="sortTable('table228', 8)">Portfolio_portfolio_strategy</th></tr></table><table id="table229" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_asset</b></caption><tr><th onclick="sortTable('table229', 0)">ID</th><th onclick="sortTable('table229', 1)">Trans_asset_id</th><th onclick="sortTable('table229', 2)">Trans_asset_description</th><th onclick="sortTable('table229', 3)">Ref_asset_name</th><th onclick="sortTable('table229', 4)">Ref_asset_id</th><th onclick="sortTable('table229', 5)">Ref_asset_description</th><th onclick="sortTable('table229', 6)">Trans_asset_name</th><th onclick="sortTable('table229', 7)">Ref_asset_strategy_id</th><th onclick="sortTable('table229', 8)">Ref_asset_strategy</th></tr></table><table id="table230" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_country</b></caption><tr><th onclick="sortTable('table230', 0)">ID</th><th onclick="sortTable('table230', 1)">Ref_country_code</th><th onclick="sortTable('table230', 2)">Ref_country_id</th><th onclick="sortTable('table230', 3)">Ref_country_name</th></tr></table><table id="table231" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_currency</b></caption><tr><th onclick="sortTable('table231', 0)">ID</th><th onclick="sortTable('table231', 1)">Ref_currency_code</th><th onclick="sortTable('table231', 2)">Ref_currency_id</th><th onclick="sortTable('table231', 3)">Ref_currency_name</th><th onclick="sortTable('table231', 4)">Ref_currency_country_id</th><th onclick="sortTable('table231', 5)">Trans_currency_name</th><th onclick="sortTable('table231', 6)">Trans_currency_code</th><th onclick="sortTable('table231', 7)">Trans_currency_id</th><th onclick="sortTable('table231', 8)">Ref_currency_country</th></tr></table><table id="table232" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_strategy</b></caption><tr><th onclick="sortTable('table232', 0)">ID</th><th onclick="sortTable('table232', 1)">Portfolio_strategy_description</th><th onclick="sortTable('table232', 2)">Portfolio_strategy_id</th><th onclick="sortTable('table232', 3)">Ref_strategy_name</th><th onclick="sortTable('table232', 4)">Ref_strategy_id</th><th onclick="sortTable('table232', 5)">Portfolio_strategy_name</th><th onclick="sortTable('table232', 6)">Ref_strategy_description</th></tr></table><table id="table233" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Trans_transaction</b></caption><tr><th onclick="sortTable('table233', 0)">ID</th><th onclick="sortTable('table233', 1)">Trans_transaction_price</th><th onclick="sortTable('table233', 2)">Trans_transaction_currency_id</th><th onclick="sortTable('table233', 3)">Trans_transaction_asset_id</th><th onclick="sortTable('table233', 4)">Trans_transaction_quantity</th><th onclick="sortTable('table233', 5)">Trans_transaction_date</th><th onclick="sortTable('table233', 6)">Trans_transaction_buy_sell_ind</th><th onclick="sortTable('table233', 7)">Trans_transaction_portfolio_id</th><th onclick="sortTable('table233', 8)">Trans_transaction_id</th><th onclick="sortTable('table233', 9)">Trans_transaction_asset</th><th onclick="sortTable('table233', 10)">Trans_transaction_currency</th></tr></table></div><br style="clear:both;"/><hr/><h3>instance TransInstance</h3><div><table id="table234" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>asset</b></caption><tr><th onclick="sortTable('table234', 0)">ID</th><th onclick="sortTable('table234', 1)">id</th><th onclick="sortTable('table234', 2)">name</th><th onclick="sortTable('table234', 3)">description</th></tr><tr><td>0</td><td>1</td><td>A1</td><td>Asset1</td></tr><tr><td>1</td><td>3</td><td>A3</td><td>Asset3</td></tr><tr><td>2</td><td>5</td><td>A5</td><td>Asset5</td></tr><tr><td>3</td><td>7</td><td>A7</td><td>Asset7</td></tr><tr><td>4</td><td>9</td><td>A9</td><td>Asset9</td></tr></table><table id="table235" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>currency</b></caption><tr><th onclick="sortTable('table235', 0)">ID</th><th onclick="sortTable('table235', 1)">id</th><th onclick="sortTable('table235', 2)">code</th><th onclick="sortTable('table235', 3)">name</th></tr><tr><td>5</td><td>1</td><td>USD</td><td>US Dollar</td></tr><tr><td>6</td><td>2</td><td>EUR</td><td>Euro</td></tr><tr><td>7</td><td>3</td><td>JPY</td><td>Japanese Yen</td></tr></table><table id="table236" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>transaction</b></caption><tr><th onclick="sortTable('table236', 0)">ID</th><th onclick="sortTable('table236', 1)">id</th><th onclick="sortTable('table236', 2)">asset_id</th><th onclick="sortTable('table236', 3)">portfolio_id</th><th onclick="sortTable('table236', 4)">quantity</th><th onclick="sortTable('table236', 5)">currency_id</th><th onclick="sortTable('table236', 6)">date</th><th onclick="sortTable('table236', 7)">buy_sell_ind</th><th onclick="sortTable('table236', 8)">price</th><th onclick="sortTable('table236', 9)">asset</th><th onclick="sortTable('table236', 10)">currency</th></tr><tr><td>8</td><td>1</td><td>1</td><td>1</td><td>200</td><td>2</td><td>1/1/2011</td><td>buy</td><td>5.51</td><td>0</td><td>6</td></tr><tr><td>9</td><td>2</td><td>1</td><td>1</td><td>100</td><td>2</td><td>6/1/2011</td><td>sell</td><td>5.5</td><td>0</td><td>6</td></tr><tr><td>10</td><td>3</td><td>3</td><td>2</td><td>150</td><td>1</td><td>9/1/2013</td><td>buy</td><td>2.5</td><td>1</td><td>5</td></tr><tr><td>11</td><td>4</td><td>3</td><td>2</td><td>150</td><td>1</td><td>3/1/2014</td><td>sell</td><td>3.5</td><td>1</td><td>5</td></tr><tr><td>12</td><td>5</td><td>5</td><td>3</td><td>200</td><td>3</td><td>2/1/2013</td><td>buy</td><td>1.6</td><td>2</td><td>7</td></tr><tr><td>13</td><td>6</td><td>5</td><td>3</td><td>100</td><td>3</td><td>7/1/2013</td><td>sell</td><td>1.5</td><td>2</td><td>7</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance RefFwd</h3><div><table id="table237" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Client_client</b></caption><tr><th onclick="sortTable('table237', 0)">ID</th><th onclick="sortTable('table237', 1)">HoldPos_client_no</th><th onclick="sortTable('table237', 2)">Client_client_name</th><th onclick="sortTable('table237', 3)">HoldPos_client_desc</th><th onclick="sortTable('table237', 4)">Client_client_description</th><th onclick="sortTable('table237', 5)">HoldPos_client_nm</th><th onclick="sortTable('table237', 6)">Client_client_id</th></tr></table><table id="table238" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_holding</b></caption><tr><th onclick="sortTable('table238', 0)">ID</th><th onclick="sortTable('table238', 1)">HoldPos_holding_purchase_date</th><th onclick="sortTable('table238', 2)">HoldPos_holding_portfolio_id</th><th onclick="sortTable('table238', 3)">HoldPos_holding_end_date</th><th onclick="sortTable('table238', 4)">HoldPos_holding_purchase_price</th><th onclick="sortTable('table238', 5)">HoldPos_holding_currency_code</th><th onclick="sortTable('table238', 6)">HoldPos_holding_begin_date</th><th onclick="sortTable('table238', 7)">HoldPos_holding_id</th><th onclick="sortTable('table238', 8)">HoldPos_holding_client_no</th><th onclick="sortTable('table238', 9)">HoldPos_holding_asset_id</th><th onclick="sortTable('table238', 10)">HoldPos_holding_quantity</th><th onclick="sortTable('table238', 11)">HoldPos_holding_client</th></tr></table><table id="table239" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_position</b></caption><tr><th onclick="sortTable('table239', 0)">ID</th><th onclick="sortTable('table239', 1)">HoldPos_position_asset_id</th><th onclick="sortTable('table239', 2)">HoldPos_position_cost_basis</th><th onclick="sortTable('table239', 3)">HoldPos_position_id</th><th onclick="sortTable('table239', 4)">HoldPos_position_cost_basis_currency_code</th><th onclick="sortTable('table239', 5)">HoldPos_position_client_no</th><th onclick="sortTable('table239', 6)">HoldPos_position_quantity</th><th onclick="sortTable('table239', 7)">HoldPos_position_current_value_currency_code</th><th onclick="sortTable('table239', 8)">HoldPos_position_current_value</th><th onclick="sortTable('table239', 9)">HoldPos_position_client</th></tr></table><table id="table240" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Portfolio_portfolio</b></caption><tr><th onclick="sortTable('table240', 0)">ID</th><th onclick="sortTable('table240', 1)">Portfolio_portfolio_strategy_id</th><th onclick="sortTable('table240', 2)">Portfolio_portfolio_parent_id</th><th onclick="sortTable('table240', 3)">Portfolio_portfolio_client_id</th><th onclick="sortTable('table240', 4)">Portfolio_portfolio_description</th><th onclick="sortTable('table240', 5)">Portfolio_portfolio_id</th><th onclick="sortTable('table240', 6)">Portfolio_portfolio_name</th><th onclick="sortTable('table240', 7)">Portfolio_portfolio_parent</th><th onclick="sortTable('table240', 8)">Portfolio_portfolio_strategy</th></tr></table><table id="table241" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_asset</b></caption><tr><th onclick="sortTable('table241', 0)">ID</th><th onclick="sortTable('table241', 1)">Trans_asset_id</th><th onclick="sortTable('table241', 2)">Trans_asset_description</th><th onclick="sortTable('table241', 3)">Ref_asset_name</th><th onclick="sortTable('table241', 4)">Ref_asset_id</th><th onclick="sortTable('table241', 5)">Ref_asset_description</th><th onclick="sortTable('table241', 6)">Trans_asset_name</th><th onclick="sortTable('table241', 7)">Ref_asset_strategy_id</th><th onclick="sortTable('table241', 8)">Ref_asset_strategy</th></tr><tr><td>0</td><td>1</td><td>Asset1</td><td>A1</td><td>1</td><td>Asset1</td><td>A1</td><td>1</td><td>19</td></tr><tr><td>1</td><td>2</td><td>Asset2</td><td>A2</td><td>2</td><td>Asset2</td><td>A2</td><td>3</td><td>20</td></tr><tr><td>2</td><td>3</td><td>Asset3</td><td>A3</td><td>3</td><td>Asset3</td><td>A3</td><td>2</td><td>21</td></tr><tr><td>3</td><td>4</td><td>Asset4</td><td>A4</td><td>4</td><td>Asset4</td><td>A4</td><td>4</td><td>22</td></tr><tr><td>4</td><td>5</td><td>Asset5</td><td>A5</td><td>5</td><td>Asset5</td><td>A5</td><td>5</td><td>23</td></tr><tr><td>5</td><td>6</td><td>Asset6</td><td>A6</td><td>6</td><td>Asset6</td><td>A6</td><td>4</td><td>22</td></tr><tr><td>6</td><td>7</td><td>Asset7</td><td>A7</td><td>7</td><td>Asset7</td><td>A7</td><td>4</td><td>22</td></tr><tr><td>7</td><td>8</td><td>Asset8</td><td>A8</td><td>8</td><td>Asset8</td><td>A8</td><td>5</td><td>23</td></tr><tr><td>8</td><td>9</td><td>Asset9</td><td>A9</td><td>9</td><td>Asset9</td><td>A9</td><td>3</td><td>20</td></tr><tr><td>9</td><td>10</td><td>Asset10</td><td>A10</td><td>10</td><td>Asset10</td><td>A10</td><td>1</td><td>19</td></tr></table><table id="table242" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_country</b></caption><tr><th onclick="sortTable('table242', 0)">ID</th><th onclick="sortTable('table242', 1)">Ref_country_code</th><th onclick="sortTable('table242', 2)">Ref_country_id</th><th onclick="sortTable('table242', 3)">Ref_country_name</th></tr><tr><td>10</td><td>AU</td><td>1</td><td>Australia</td></tr><tr><td>11</td><td>CH</td><td>2</td><td>Switzerland</td></tr><tr><td>12</td><td>CN</td><td>3</td><td>China</td></tr><tr><td>13</td><td>EU</td><td>4</td><td>European Union</td></tr><tr><td>14</td><td>JP</td><td>5</td><td>Japan</td></tr><tr><td>15</td><td>US</td><td>6</td><td>United States of America</td></tr></table><table id="table243" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_currency</b></caption><tr><th onclick="sortTable('table243', 0)">ID</th><th onclick="sortTable('table243', 1)">Ref_currency_code</th><th onclick="sortTable('table243', 2)">Ref_currency_id</th><th onclick="sortTable('table243', 3)">Ref_currency_name</th><th onclick="sortTable('table243', 4)">Ref_currency_country_id</th><th onclick="sortTable('table243', 5)">Trans_currency_name</th><th onclick="sortTable('table243', 6)">Trans_currency_code</th><th onclick="sortTable('table243', 7)">Trans_currency_id</th><th onclick="sortTable('table243', 8)">Ref_currency_country</th></tr><tr><td>16</td><td>USD</td><td>1</td><td>US Dollar</td><td>6</td><td>US Dollar</td><td>USD</td><td>1</td><td>15</td></tr><tr><td>17</td><td>EUR</td><td>2</td><td>Euro</td><td>4</td><td>Euro</td><td>EUR</td><td>2</td><td>13</td></tr><tr><td>18</td><td>JPY</td><td>3</td><td>Japanese Yen</td><td>5</td><td>Japanese Yen</td><td>JPY</td><td>3</td><td>14</td></tr></table><table id="table244" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_strategy</b></caption><tr><th onclick="sortTable('table244', 0)">ID</th><th onclick="sortTable('table244', 1)">Portfolio_strategy_description</th><th onclick="sortTable('table244', 2)">Portfolio_strategy_id</th><th onclick="sortTable('table244', 3)">Ref_strategy_name</th><th onclick="sortTable('table244', 4)">Ref_strategy_id</th><th onclick="sortTable('table244', 5)">Portfolio_strategy_name</th><th onclick="sortTable('table244', 6)">Ref_strategy_description</th></tr><tr><td>19</td><td>Strategy1</td><td>1</td><td>Strat1</td><td>1</td><td>Strat1</td><td>Strategy1</td></tr><tr><td>20</td><td>Strategy3</td><td>3</td><td>Strat3</td><td>3</td><td>Strat3</td><td>Strategy3</td></tr><tr><td>21</td><td>Strategy2</td><td>2</td><td>Strat2</td><td>2</td><td>Strat2</td><td>Strategy2</td></tr><tr><td>22</td><td>Strategy4</td><td>4</td><td>Strat4</td><td>4</td><td>Strat4</td><td>Strategy4</td></tr><tr><td>23</td><td>Strategy5</td><td>5</td><td>Strat5</td><td>5</td><td>Strat5</td><td>Strategy5</td></tr></table><table id="table245" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Trans_transaction</b></caption><tr><th onclick="sortTable('table245', 0)">ID</th><th onclick="sortTable('table245', 1)">Trans_transaction_price</th><th onclick="sortTable('table245', 2)">Trans_transaction_currency_id</th><th onclick="sortTable('table245', 3)">Trans_transaction_asset_id</th><th onclick="sortTable('table245', 4)">Trans_transaction_quantity</th><th onclick="sortTable('table245', 5)">Trans_transaction_date</th><th onclick="sortTable('table245', 6)">Trans_transaction_buy_sell_ind</th><th onclick="sortTable('table245', 7)">Trans_transaction_portfolio_id</th><th onclick="sortTable('table245', 8)">Trans_transaction_id</th><th onclick="sortTable('table245', 9)">Trans_transaction_asset</th><th onclick="sortTable('table245', 10)">Trans_transaction_currency</th></tr></table></div><br style="clear:both;"/><hr/><h3>instance TransFwd</h3><div><table id="table246" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Client_client</b></caption><tr><th onclick="sortTable('table246', 0)">ID</th><th onclick="sortTable('table246', 1)">HoldPos_client_no</th><th onclick="sortTable('table246', 2)">Client_client_name</th><th onclick="sortTable('table246', 3)">HoldPos_client_desc</th><th onclick="sortTable('table246', 4)">Client_client_description</th><th onclick="sortTable('table246', 5)">HoldPos_client_nm</th><th onclick="sortTable('table246', 6)">Client_client_id</th></tr></table><table id="table247" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_holding</b></caption><tr><th onclick="sortTable('table247', 0)">ID</th><th onclick="sortTable('table247', 1)">HoldPos_holding_purchase_date</th><th onclick="sortTable('table247', 2)">HoldPos_holding_portfolio_id</th><th onclick="sortTable('table247', 3)">HoldPos_holding_end_date</th><th onclick="sortTable('table247', 4)">HoldPos_holding_purchase_price</th><th onclick="sortTable('table247', 5)">HoldPos_holding_currency_code</th><th onclick="sortTable('table247', 6)">HoldPos_holding_begin_date</th><th onclick="sortTable('table247', 7)">HoldPos_holding_id</th><th onclick="sortTable('table247', 8)">HoldPos_holding_client_no</th><th onclick="sortTable('table247', 9)">HoldPos_holding_asset_id</th><th onclick="sortTable('table247', 10)">HoldPos_holding_quantity</th><th onclick="sortTable('table247', 11)">HoldPos_holding_client</th></tr></table><table id="table248" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_position</b></caption><tr><th onclick="sortTable('table248', 0)">ID</th><th onclick="sortTable('table248', 1)">HoldPos_position_asset_id</th><th onclick="sortTable('table248', 2)">HoldPos_position_cost_basis</th><th onclick="sortTable('table248', 3)">HoldPos_position_id</th><th onclick="sortTable('table248', 4)">HoldPos_position_cost_basis_currency_code</th><th onclick="sortTable('table248', 5)">HoldPos_position_client_no</th><th onclick="sortTable('table248', 6)">HoldPos_position_quantity</th><th onclick="sortTable('table248', 7)">HoldPos_position_current_value_currency_code</th><th onclick="sortTable('table248', 8)">HoldPos_position_current_value</th><th onclick="sortTable('table248', 9)">HoldPos_position_client</th></tr></table><table id="table249" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Portfolio_portfolio</b></caption><tr><th onclick="sortTable('table249', 0)">ID</th><th onclick="sortTable('table249', 1)">Portfolio_portfolio_strategy_id</th><th onclick="sortTable('table249', 2)">Portfolio_portfolio_parent_id</th><th onclick="sortTable('table249', 3)">Portfolio_portfolio_client_id</th><th onclick="sortTable('table249', 4)">Portfolio_portfolio_description</th><th onclick="sortTable('table249', 5)">Portfolio_portfolio_id</th><th onclick="sortTable('table249', 6)">Portfolio_portfolio_name</th><th onclick="sortTable('table249', 7)">Portfolio_portfolio_parent</th><th onclick="sortTable('table249', 8)">Portfolio_portfolio_strategy</th></tr></table><table id="table250" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_asset</b></caption><tr><th onclick="sortTable('table250', 0)">ID</th><th onclick="sortTable('table250', 1)">Trans_asset_id</th><th onclick="sortTable('table250', 2)">Trans_asset_description</th><th onclick="sortTable('table250', 3)">Ref_asset_name</th><th onclick="sortTable('table250', 4)">Ref_asset_id</th><th onclick="sortTable('table250', 5)">Ref_asset_description</th><th onclick="sortTable('table250', 6)">Trans_asset_name</th><th onclick="sortTable('table250', 7)">Ref_asset_strategy_id</th><th onclick="sortTable('table250', 8)">Ref_asset_strategy</th></tr><tr><td>0</td><td>1</td><td>Asset1</td><td>A1</td><td>1</td><td>Asset1</td><td>A1</td><td>?0</td><td>11</td></tr><tr><td>1</td><td>3</td><td>Asset3</td><td>A3</td><td>3</td><td>Asset3</td><td>A3</td><td>?1</td><td>12</td></tr><tr><td>2</td><td>5</td><td>Asset5</td><td>A5</td><td>5</td><td>Asset5</td><td>A5</td><td>?2</td><td>13</td></tr><tr><td>3</td><td>7</td><td>Asset7</td><td>A7</td><td>7</td><td>Asset7</td><td>A7</td><td>?3</td><td>14</td></tr><tr><td>4</td><td>9</td><td>Asset9</td><td>A9</td><td>9</td><td>Asset9</td><td>A9</td><td>?4</td><td>15</td></tr></table><table id="table251" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_country</b></caption><tr><th onclick="sortTable('table251', 0)">ID</th><th onclick="sortTable('table251', 1)">Ref_country_code</th><th onclick="sortTable('table251', 2)">Ref_country_id</th><th onclick="sortTable('table251', 3)">Ref_country_name</th></tr><tr><td>5</td><td>?5</td><td>?6</td><td>?7</td></tr><tr><td>6</td><td>?8</td><td>?9</td><td>?10</td></tr><tr><td>7</td><td>?11</td><td>?12</td><td>?13</td></tr></table><table id="table252" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_currency</b></caption><tr><th onclick="sortTable('table252', 0)">ID</th><th onclick="sortTable('table252', 1)">Ref_currency_code</th><th onclick="sortTable('table252', 2)">Ref_currency_id</th><th onclick="sortTable('table252', 3)">Ref_currency_name</th><th onclick="sortTable('table252', 4)">Ref_currency_country_id</th><th onclick="sortTable('table252', 5)">Trans_currency_name</th><th onclick="sortTable('table252', 6)">Trans_currency_code</th><th onclick="sortTable('table252', 7)">Trans_currency_id</th><th onclick="sortTable('table252', 8)">Ref_currency_country</th></tr><tr><td>8</td><td>USD</td><td>1</td><td>US Dollar</td><td>?6</td><td>US Dollar</td><td>USD</td><td>1</td><td>5</td></tr><tr><td>9</td><td>EUR</td><td>2</td><td>Euro</td><td>?9</td><td>Euro</td><td>EUR</td><td>2</td><td>6</td></tr><tr><td>10</td><td>JPY</td><td>3</td><td>Japanese Yen</td><td>?12</td><td>Japanese Yen</td><td>JPY</td><td>3</td><td>7</td></tr></table><table id="table253" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_strategy</b></caption><tr><th onclick="sortTable('table253', 0)">ID</th><th onclick="sortTable('table253', 1)">Portfolio_strategy_description</th><th onclick="sortTable('table253', 2)">Portfolio_strategy_id</th><th onclick="sortTable('table253', 3)">Ref_strategy_name</th><th onclick="sortTable('table253', 4)">Ref_strategy_id</th><th onclick="sortTable('table253', 5)">Portfolio_strategy_name</th><th onclick="sortTable('table253', 6)">Ref_strategy_description</th></tr><tr><td>11</td><td>?14</td><td>?0</td><td>?15</td><td>?0</td><td>?15</td><td>?14</td></tr><tr><td>12</td><td>?16</td><td>?1</td><td>?17</td><td>?1</td><td>?17</td><td>?16</td></tr><tr><td>13</td><td>?18</td><td>?2</td><td>?19</td><td>?2</td><td>?19</td><td>?18</td></tr><tr><td>14</td><td>?20</td><td>?3</td><td>?21</td><td>?3</td><td>?21</td><td>?20</td></tr><tr><td>15</td><td>?22</td><td>?4</td><td>?23</td><td>?4</td><td>?23</td><td>?22</td></tr></table><table id="table254" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Trans_transaction</b></caption><tr><th onclick="sortTable('table254', 0)">ID</th><th onclick="sortTable('table254', 1)">Trans_transaction_price</th><th onclick="sortTable('table254', 2)">Trans_transaction_currency_id</th><th onclick="sortTable('table254', 3)">Trans_transaction_asset_id</th><th onclick="sortTable('table254', 4)">Trans_transaction_quantity</th><th onclick="sortTable('table254', 5)">Trans_transaction_date</th><th onclick="sortTable('table254', 6)">Trans_transaction_buy_sell_ind</th><th onclick="sortTable('table254', 7)">Trans_transaction_portfolio_id</th><th onclick="sortTable('table254', 8)">Trans_transaction_id</th><th onclick="sortTable('table254', 9)">Trans_transaction_asset</th><th onclick="sortTable('table254', 10)">Trans_transaction_currency</th></tr><tr><td>16</td><td>5.51</td><td>2</td><td>1</td><td>200</td><td>1/1/2011</td><td>buy</td><td>1</td><td>1</td><td>0</td><td>9</td></tr><tr><td>17</td><td>5.5</td><td>2</td><td>1</td><td>100</td><td>6/1/2011</td><td>sell</td><td>1</td><td>2</td><td>0</td><td>9</td></tr><tr><td>18</td><td>2.5</td><td>1</td><td>3</td><td>150</td><td>9/1/2013</td><td>buy</td><td>2</td><td>3</td><td>1</td><td>8</td></tr><tr><td>19</td><td>3.5</td><td>1</td><td>3</td><td>150</td><td>3/1/2014</td><td>sell</td><td>2</td><td>4</td><td>1</td><td>8</td></tr><tr><td>20</td><td>1.6</td><td>3</td><td>5</td><td>200</td><td>2/1/2013</td><td>buy</td><td>3</td><td>5</td><td>2</td><td>10</td></tr><tr><td>21</td><td>1.5</td><td>3</td><td>5</td><td>100</td><td>7/1/2013</td><td>sell</td><td>3</td><td>6</td><td>2</td><td>10</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance CoProd</h3><div><table id="table255" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Client_client</b></caption><tr><th onclick="sortTable('table255', 0)">ID</th><th onclick="sortTable('table255', 1)">HoldPos_client_no</th><th onclick="sortTable('table255', 2)">Client_client_name</th><th onclick="sortTable('table255', 3)">HoldPos_client_desc</th><th onclick="sortTable('table255', 4)">Client_client_description</th><th onclick="sortTable('table255', 5)">HoldPos_client_nm</th><th onclick="sortTable('table255', 6)">Client_client_id</th></tr><tr><td>0</td><td>1</td><td>Tom</td><td>Tom Client</td><td>Tom Client</td><td>Tom</td><td>1</td></tr><tr><td>1</td><td>2</td><td>Dick</td><td>Dick Client</td><td>Dick Client</td><td>Dick</td><td>2</td></tr><tr><td>2</td><td>3</td><td>Harry</td><td>Harry Client</td><td>Harry Client</td><td>Harry</td><td>3</td></tr><tr><td>3</td><td>1</td><td>Tom</td><td>Tom Client</td><td>Tom Client</td><td>Tom</td><td>1</td></tr><tr><td>4</td><td>2</td><td>Dick</td><td>Dick Client</td><td>Dick Client</td><td>Dick</td><td>2</td></tr></table><table id="table256" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_holding</b></caption><tr><th onclick="sortTable('table256', 0)">ID</th><th onclick="sortTable('table256', 1)">HoldPos_holding_purchase_date</th><th onclick="sortTable('table256', 2)">HoldPos_holding_portfolio_id</th><th onclick="sortTable('table256', 3)">HoldPos_holding_end_date</th><th onclick="sortTable('table256', 4)">HoldPos_holding_purchase_price</th><th onclick="sortTable('table256', 5)">HoldPos_holding_currency_code</th><th onclick="sortTable('table256', 6)">HoldPos_holding_begin_date</th><th onclick="sortTable('table256', 7)">HoldPos_holding_id</th><th onclick="sortTable('table256', 8)">HoldPos_holding_client_no</th><th onclick="sortTable('table256', 9)">HoldPos_holding_asset_id</th><th onclick="sortTable('table256', 10)">HoldPos_holding_quantity</th><th onclick="sortTable('table256', 11)">HoldPos_holding_client</th></tr><tr><td>5</td><td>1/1/2011</td><td>1</td><td>6/1/2011</td><td>5.51</td><td>EUR</td><td>1/1/2011</td><td>1</td><td>1</td><td>1</td><td>200</td><td>3</td></tr><tr><td>6</td><td>1/1/2011</td><td>1</td><td>?0</td><td>5.1</td><td>EUR</td><td>6/1/2011</td><td>2</td><td>1</td><td>1</td><td>100</td><td>3</td></tr><tr><td>7</td><td>9/1/2013</td><td>3</td><td>3/1/2014</td><td>2.5</td><td>JPY</td><td>9/1/2013</td><td>3</td><td>2</td><td>3</td><td>150</td><td>4</td></tr><tr><td>8</td><td>2/1/2013</td><td>3</td><td>7/1/2013</td><td>1.6</td><td>USD</td><td>2/1/2013</td><td>4</td><td>2</td><td>5</td><td>200</td><td>4</td></tr><tr><td>9</td><td>2/1/2013</td><td>3</td><td>?1</td><td>1.6</td><td>USD</td><td>7/1/2013</td><td>5</td><td>2</td><td>5</td><td>100</td><td>4</td></tr></table><table id="table257" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_position</b></caption><tr><th onclick="sortTable('table257', 0)">ID</th><th onclick="sortTable('table257', 1)">HoldPos_position_asset_id</th><th onclick="sortTable('table257', 2)">HoldPos_position_cost_basis</th><th onclick="sortTable('table257', 3)">HoldPos_position_id</th><th onclick="sortTable('table257', 4)">HoldPos_position_cost_basis_currency_code</th><th onclick="sortTable('table257', 5)">HoldPos_position_client_no</th><th onclick="sortTable('table257', 6)">HoldPos_position_quantity</th><th onclick="sortTable('table257', 7)">HoldPos_position_current_value_currency_code</th><th onclick="sortTable('table257', 8)">HoldPos_position_current_value</th><th onclick="sortTable('table257', 9)">HoldPos_position_client</th></tr><tr><td>10</td><td>1</td><td>551</td><td>1</td><td>EUR</td><td>1</td><td>100</td><td>EUR</td><td>550</td><td>3</td></tr><tr><td>11</td><td>5</td><td>160</td><td>2</td><td>JPY</td><td>2</td><td>100</td><td>JPY</td><td>170</td><td>4</td></tr></table><table id="table258" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Portfolio_portfolio</b></caption><tr><th onclick="sortTable('table258', 0)">ID</th><th onclick="sortTable('table258', 1)">Portfolio_portfolio_strategy_id</th><th onclick="sortTable('table258', 2)">Portfolio_portfolio_parent_id</th><th onclick="sortTable('table258', 3)">Portfolio_portfolio_client_id</th><th onclick="sortTable('table258', 4)">Portfolio_portfolio_description</th><th onclick="sortTable('table258', 5)">Portfolio_portfolio_id</th><th onclick="sortTable('table258', 6)">Portfolio_portfolio_name</th><th onclick="sortTable('table258', 7)">Portfolio_portfolio_parent</th><th onclick="sortTable('table258', 8)">Portfolio_portfolio_strategy</th></tr><tr><td>12</td><td>2</td><td>1</td><td>1</td><td>Portfolio1</td><td>1</td><td>Port1</td><td>12</td><td>46</td></tr><tr><td>13</td><td>2</td><td>2</td><td>2</td><td>Portfolio2</td><td>2</td><td>Port2</td><td>13</td><td>46</td></tr><tr><td>14</td><td>1</td><td>2</td><td>2</td><td>Portfolio3</td><td>3</td><td>Port3</td><td>13</td><td>45</td></tr></table><table id="table259" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_asset</b></caption><tr><th onclick="sortTable('table259', 0)">ID</th><th onclick="sortTable('table259', 1)">Trans_asset_id</th><th onclick="sortTable('table259', 2)">Trans_asset_description</th><th onclick="sortTable('table259', 3)">Ref_asset_name</th><th onclick="sortTable('table259', 4)">Ref_asset_id</th><th onclick="sortTable('table259', 5)">Ref_asset_description</th><th onclick="sortTable('table259', 6)">Trans_asset_name</th><th onclick="sortTable('table259', 7)">Ref_asset_strategy_id</th><th onclick="sortTable('table259', 8)">Ref_asset_strategy</th></tr><tr><td>15</td><td>1</td><td>Asset1</td><td>A1</td><td>1</td><td>Asset1</td><td>A1</td><td>1</td><td>48</td></tr><tr><td>16</td><td>2</td><td>Asset2</td><td>A2</td><td>2</td><td>Asset2</td><td>A2</td><td>3</td><td>49</td></tr><tr><td>17</td><td>3</td><td>Asset3</td><td>A3</td><td>3</td><td>Asset3</td><td>A3</td><td>2</td><td>50</td></tr><tr><td>18</td><td>4</td><td>Asset4</td><td>A4</td><td>4</td><td>Asset4</td><td>A4</td><td>4</td><td>51</td></tr><tr><td>19</td><td>5</td><td>Asset5</td><td>A5</td><td>5</td><td>Asset5</td><td>A5</td><td>5</td><td>52</td></tr><tr><td>20</td><td>6</td><td>Asset6</td><td>A6</td><td>6</td><td>Asset6</td><td>A6</td><td>4</td><td>51</td></tr><tr><td>21</td><td>7</td><td>Asset7</td><td>A7</td><td>7</td><td>Asset7</td><td>A7</td><td>4</td><td>51</td></tr><tr><td>22</td><td>8</td><td>Asset8</td><td>A8</td><td>8</td><td>Asset8</td><td>A8</td><td>5</td><td>52</td></tr><tr><td>23</td><td>9</td><td>Asset9</td><td>A9</td><td>9</td><td>Asset9</td><td>A9</td><td>3</td><td>49</td></tr><tr><td>24</td><td>10</td><td>Asset10</td><td>A10</td><td>10</td><td>Asset10</td><td>A10</td><td>1</td><td>48</td></tr><tr><td>25</td><td>1</td><td>Asset1</td><td>A1</td><td>1</td><td>Asset1</td><td>A1</td><td>?2</td><td>53</td></tr><tr><td>26</td><td>3</td><td>Asset3</td><td>A3</td><td>3</td><td>Asset3</td><td>A3</td><td>?3</td><td>54</td></tr><tr><td>27</td><td>5</td><td>Asset5</td><td>A5</td><td>5</td><td>Asset5</td><td>A5</td><td>?4</td><td>55</td></tr><tr><td>28</td><td>7</td><td>Asset7</td><td>A7</td><td>7</td><td>Asset7</td><td>A7</td><td>?5</td><td>56</td></tr><tr><td>29</td><td>9</td><td>Asset9</td><td>A9</td><td>9</td><td>Asset9</td><td>A9</td><td>?6</td><td>57</td></tr></table><table id="table260" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_country</b></caption><tr><th onclick="sortTable('table260', 0)">ID</th><th onclick="sortTable('table260', 1)">Ref_country_code</th><th onclick="sortTable('table260', 2)">Ref_country_id</th><th onclick="sortTable('table260', 3)">Ref_country_name</th></tr><tr><td>30</td><td>AU</td><td>1</td><td>Australia</td></tr><tr><td>31</td><td>CH</td><td>2</td><td>Switzerland</td></tr><tr><td>32</td><td>CN</td><td>3</td><td>China</td></tr><tr><td>33</td><td>EU</td><td>4</td><td>European Union</td></tr><tr><td>34</td><td>JP</td><td>5</td><td>Japan</td></tr><tr><td>35</td><td>US</td><td>6</td><td>United States of America</td></tr><tr><td>36</td><td>?7</td><td>?8</td><td>?9</td></tr><tr><td>37</td><td>?10</td><td>?11</td><td>?12</td></tr><tr><td>38</td><td>?13</td><td>?14</td><td>?15</td></tr></table><table id="table261" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_currency</b></caption><tr><th onclick="sortTable('table261', 0)">ID</th><th onclick="sortTable('table261', 1)">Ref_currency_code</th><th onclick="sortTable('table261', 2)">Ref_currency_id</th><th onclick="sortTable('table261', 3)">Ref_currency_name</th><th onclick="sortTable('table261', 4)">Ref_currency_country_id</th><th onclick="sortTable('table261', 5)">Trans_currency_name</th><th onclick="sortTable('table261', 6)">Trans_currency_code</th><th onclick="sortTable('table261', 7)">Trans_currency_id</th><th onclick="sortTable('table261', 8)">Ref_currency_country</th></tr><tr><td>39</td><td>USD</td><td>1</td><td>US Dollar</td><td>6</td><td>US Dollar</td><td>USD</td><td>1</td><td>35</td></tr><tr><td>40</td><td>EUR</td><td>2</td><td>Euro</td><td>4</td><td>Euro</td><td>EUR</td><td>2</td><td>33</td></tr><tr><td>41</td><td>JPY</td><td>3</td><td>Japanese Yen</td><td>5</td><td>Japanese Yen</td><td>JPY</td><td>3</td><td>34</td></tr><tr><td>42</td><td>USD</td><td>1</td><td>US Dollar</td><td>?8</td><td>US Dollar</td><td>USD</td><td>1</td><td>36</td></tr><tr><td>43</td><td>EUR</td><td>2</td><td>Euro</td><td>?11</td><td>Euro</td><td>EUR</td><td>2</td><td>37</td></tr><tr><td>44</td><td>JPY</td><td>3</td><td>Japanese Yen</td><td>?14</td><td>Japanese Yen</td><td>JPY</td><td>3</td><td>38</td></tr></table><table id="table262" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_strategy</b></caption><tr><th onclick="sortTable('table262', 0)">ID</th><th onclick="sortTable('table262', 1)">Portfolio_strategy_description</th><th onclick="sortTable('table262', 2)">Portfolio_strategy_id</th><th onclick="sortTable('table262', 3)">Ref_strategy_name</th><th onclick="sortTable('table262', 4)">Ref_strategy_id</th><th onclick="sortTable('table262', 5)">Portfolio_strategy_name</th><th onclick="sortTable('table262', 6)">Ref_strategy_description</th></tr><tr><td>45</td><td>Strategy1</td><td>1</td><td>Strat1</td><td>1</td><td>Strat1</td><td>Strategy1</td></tr><tr><td>46</td><td>Strategy2</td><td>2</td><td>Strat2</td><td>2</td><td>Strat2</td><td>Strategy2</td></tr><tr><td>47</td><td>Strategy3</td><td>3</td><td>Strat3</td><td>3</td><td>Strat3</td><td>Strategy3</td></tr><tr><td>48</td><td>Strategy1</td><td>1</td><td>Strat1</td><td>1</td><td>Strat1</td><td>Strategy1</td></tr><tr><td>49</td><td>Strategy3</td><td>3</td><td>Strat3</td><td>3</td><td>Strat3</td><td>Strategy3</td></tr><tr><td>50</td><td>Strategy2</td><td>2</td><td>Strat2</td><td>2</td><td>Strat2</td><td>Strategy2</td></tr><tr><td>51</td><td>Strategy4</td><td>4</td><td>Strat4</td><td>4</td><td>Strat4</td><td>Strategy4</td></tr><tr><td>52</td><td>Strategy5</td><td>5</td><td>Strat5</td><td>5</td><td>Strat5</td><td>Strategy5</td></tr><tr><td>53</td><td>?16</td><td>?2</td><td>?17</td><td>?2</td><td>?17</td><td>?16</td></tr><tr><td>54</td><td>?18</td><td>?3</td><td>?19</td><td>?3</td><td>?19</td><td>?18</td></tr><tr><td>55</td><td>?20</td><td>?4</td><td>?21</td><td>?4</td><td>?21</td><td>?20</td></tr><tr><td>56</td><td>?22</td><td>?5</td><td>?23</td><td>?5</td><td>?23</td><td>?22</td></tr><tr><td>57</td><td>?24</td><td>?6</td><td>?25</td><td>?6</td><td>?25</td><td>?24</td></tr></table><table id="table263" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Trans_transaction</b></caption><tr><th onclick="sortTable('table263', 0)">ID</th><th onclick="sortTable('table263', 1)">Trans_transaction_price</th><th onclick="sortTable('table263', 2)">Trans_transaction_currency_id</th><th onclick="sortTable('table263', 3)">Trans_transaction_asset_id</th><th onclick="sortTable('table263', 4)">Trans_transaction_quantity</th><th onclick="sortTable('table263', 5)">Trans_transaction_date</th><th onclick="sortTable('table263', 6)">Trans_transaction_buy_sell_ind</th><th onclick="sortTable('table263', 7)">Trans_transaction_portfolio_id</th><th onclick="sortTable('table263', 8)">Trans_transaction_id</th><th onclick="sortTable('table263', 9)">Trans_transaction_asset</th><th onclick="sortTable('table263', 10)">Trans_transaction_currency</th></tr><tr><td>58</td><td>5.51</td><td>2</td><td>1</td><td>200</td><td>1/1/2011</td><td>buy</td><td>1</td><td>1</td><td>25</td><td>43</td></tr><tr><td>59</td><td>5.5</td><td>2</td><td>1</td><td>100</td><td>6/1/2011</td><td>sell</td><td>1</td><td>2</td><td>25</td><td>43</td></tr><tr><td>60</td><td>2.5</td><td>1</td><td>3</td><td>150</td><td>9/1/2013</td><td>buy</td><td>2</td><td>3</td><td>26</td><td>42</td></tr><tr><td>61</td><td>3.5</td><td>1</td><td>3</td><td>150</td><td>3/1/2014</td><td>sell</td><td>2</td><td>4</td><td>26</td><td>42</td></tr><tr><td>62</td><td>1.6</td><td>3</td><td>5</td><td>200</td><td>2/1/2013</td><td>buy</td><td>3</td><td>5</td><td>27</td><td>44</td></tr><tr><td>63</td><td>1.5</td><td>3</td><td>5</td><td>100</td><td>7/1/2013</td><td>sell</td><td>3</td><td>6</td><td>27</td><td>44</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance E</h3><div><table id="table264" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Client_client</b></caption><tr><th onclick="sortTable('table264', 0)">ID</th><th onclick="sortTable('table264', 1)">HoldPos_client_no</th><th onclick="sortTable('table264', 2)">Client_client_name</th><th onclick="sortTable('table264', 3)">HoldPos_client_desc</th><th onclick="sortTable('table264', 4)">Client_client_description</th><th onclick="sortTable('table264', 5)">HoldPos_client_nm</th><th onclick="sortTable('table264', 6)">Client_client_id</th></tr><tr><td>0</td><td>1</td><td>Tom</td><td>Tom Client</td><td>Tom Client</td><td>Tom</td><td>1</td></tr><tr><td>1</td><td>2</td><td>Dick</td><td>Dick Client</td><td>Dick Client</td><td>Dick</td><td>2</td></tr><tr><td>2</td><td>3</td><td>Harry</td><td>Harry Client</td><td>Harry Client</td><td>Harry</td><td>3</td></tr></table><table id="table265" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_holding</b></caption><tr><th onclick="sortTable('table265', 0)">ID</th><th onclick="sortTable('table265', 1)">HoldPos_holding_purchase_date</th><th onclick="sortTable('table265', 2)">HoldPos_holding_portfolio_id</th><th onclick="sortTable('table265', 3)">HoldPos_holding_end_date</th><th onclick="sortTable('table265', 4)">HoldPos_holding_purchase_price</th><th onclick="sortTable('table265', 5)">HoldPos_holding_currency_code</th><th onclick="sortTable('table265', 6)">HoldPos_holding_begin_date</th><th onclick="sortTable('table265', 7)">HoldPos_holding_id</th><th onclick="sortTable('table265', 8)">HoldPos_holding_client_no</th><th onclick="sortTable('table265', 9)">HoldPos_holding_asset_id</th><th onclick="sortTable('table265', 10)">HoldPos_holding_quantity</th><th onclick="sortTable('table265', 11)">HoldPos_holding_client</th></tr><tr><td>3</td><td>1/1/2011</td><td>1</td><td>6/1/2011</td><td>5.51</td><td>EUR</td><td>1/1/2011</td><td>1</td><td>1</td><td>1</td><td>200</td><td>0</td></tr><tr><td>4</td><td>1/1/2011</td><td>1</td><td>?0</td><td>5.1</td><td>EUR</td><td>6/1/2011</td><td>2</td><td>1</td><td>1</td><td>100</td><td>0</td></tr><tr><td>5</td><td>9/1/2013</td><td>3</td><td>3/1/2014</td><td>2.5</td><td>JPY</td><td>9/1/2013</td><td>3</td><td>2</td><td>3</td><td>150</td><td>1</td></tr><tr><td>6</td><td>2/1/2013</td><td>3</td><td>7/1/2013</td><td>1.6</td><td>USD</td><td>2/1/2013</td><td>4</td><td>2</td><td>5</td><td>200</td><td>1</td></tr><tr><td>7</td><td>2/1/2013</td><td>3</td><td>?1</td><td>1.6</td><td>USD</td><td>7/1/2013</td><td>5</td><td>2</td><td>5</td><td>100</td><td>1</td></tr></table><table id="table266" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>HoldPos_position</b></caption><tr><th onclick="sortTable('table266', 0)">ID</th><th onclick="sortTable('table266', 1)">HoldPos_position_asset_id</th><th onclick="sortTable('table266', 2)">HoldPos_position_cost_basis</th><th onclick="sortTable('table266', 3)">HoldPos_position_id</th><th onclick="sortTable('table266', 4)">HoldPos_position_cost_basis_currency_code</th><th onclick="sortTable('table266', 5)">HoldPos_position_client_no</th><th onclick="sortTable('table266', 6)">HoldPos_position_quantity</th><th onclick="sortTable('table266', 7)">HoldPos_position_current_value_currency_code</th><th onclick="sortTable('table266', 8)">HoldPos_position_current_value</th><th onclick="sortTable('table266', 9)">HoldPos_position_client</th></tr><tr><td>8</td><td>1</td><td>551</td><td>1</td><td>EUR</td><td>1</td><td>100</td><td>EUR</td><td>550</td><td>0</td></tr><tr><td>9</td><td>5</td><td>160</td><td>2</td><td>JPY</td><td>2</td><td>100</td><td>JPY</td><td>170</td><td>1</td></tr></table><table id="table267" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Portfolio_portfolio</b></caption><tr><th onclick="sortTable('table267', 0)">ID</th><th onclick="sortTable('table267', 1)">Portfolio_portfolio_strategy_id</th><th onclick="sortTable('table267', 2)">Portfolio_portfolio_parent_id</th><th onclick="sortTable('table267', 3)">Portfolio_portfolio_client_id</th><th onclick="sortTable('table267', 4)">Portfolio_portfolio_description</th><th onclick="sortTable('table267', 5)">Portfolio_portfolio_id</th><th onclick="sortTable('table267', 6)">Portfolio_portfolio_name</th><th onclick="sortTable('table267', 7)">Portfolio_portfolio_parent</th><th onclick="sortTable('table267', 8)">Portfolio_portfolio_strategy</th></tr><tr><td>10</td><td>2</td><td>1</td><td>1</td><td>Portfolio1</td><td>1</td><td>Port1</td><td>10</td><td>33</td></tr><tr><td>11</td><td>2</td><td>2</td><td>2</td><td>Portfolio2</td><td>2</td><td>Port2</td><td>11</td><td>33</td></tr><tr><td>12</td><td>1</td><td>2</td><td>2</td><td>Portfolio3</td><td>3</td><td>Port3</td><td>11</td><td>32</td></tr></table><table id="table268" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_asset</b></caption><tr><th onclick="sortTable('table268', 0)">ID</th><th onclick="sortTable('table268', 1)">Trans_asset_id</th><th onclick="sortTable('table268', 2)">Trans_asset_description</th><th onclick="sortTable('table268', 3)">Ref_asset_name</th><th onclick="sortTable('table268', 4)">Ref_asset_id</th><th onclick="sortTable('table268', 5)">Ref_asset_description</th><th onclick="sortTable('table268', 6)">Trans_asset_name</th><th onclick="sortTable('table268', 7)">Ref_asset_strategy_id</th><th onclick="sortTable('table268', 8)">Ref_asset_strategy</th></tr><tr><td>13</td><td>1</td><td>Asset1</td><td>A1</td><td>1</td><td>Asset1</td><td>A1</td><td>1</td><td>32</td></tr><tr><td>14</td><td>3</td><td>Asset3</td><td>A3</td><td>3</td><td>Asset3</td><td>A3</td><td>2</td><td>33</td></tr><tr><td>15</td><td>5</td><td>Asset5</td><td>A5</td><td>5</td><td>Asset5</td><td>A5</td><td>5</td><td>35</td></tr><tr><td>16</td><td>7</td><td>Asset7</td><td>A7</td><td>7</td><td>Asset7</td><td>A7</td><td>4</td><td>36</td></tr><tr><td>17</td><td>9</td><td>Asset9</td><td>A9</td><td>9</td><td>Asset9</td><td>A9</td><td>3</td><td>34</td></tr><tr><td>18</td><td>2</td><td>Asset2</td><td>A2</td><td>2</td><td>Asset2</td><td>A2</td><td>3</td><td>34</td></tr><tr><td>19</td><td>4</td><td>Asset4</td><td>A4</td><td>4</td><td>Asset4</td><td>A4</td><td>4</td><td>36</td></tr><tr><td>20</td><td>6</td><td>Asset6</td><td>A6</td><td>6</td><td>Asset6</td><td>A6</td><td>4</td><td>36</td></tr><tr><td>21</td><td>8</td><td>Asset8</td><td>A8</td><td>8</td><td>Asset8</td><td>A8</td><td>5</td><td>35</td></tr><tr><td>22</td><td>10</td><td>Asset10</td><td>A10</td><td>10</td><td>Asset10</td><td>A10</td><td>1</td><td>32</td></tr></table><table id="table269" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_country</b></caption><tr><th onclick="sortTable('table269', 0)">ID</th><th onclick="sortTable('table269', 1)">Ref_country_code</th><th onclick="sortTable('table269', 2)">Ref_country_id</th><th onclick="sortTable('table269', 3)">Ref_country_name</th></tr><tr><td>23</td><td>US</td><td>6</td><td>United States of America</td></tr><tr><td>24</td><td>EU</td><td>4</td><td>European Union</td></tr><tr><td>25</td><td>JP</td><td>5</td><td>Japan</td></tr><tr><td>26</td><td>AU</td><td>1</td><td>Australia</td></tr><tr><td>27</td><td>CH</td><td>2</td><td>Switzerland</td></tr><tr><td>28</td><td>CN</td><td>3</td><td>China</td></tr></table><table id="table270" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_currency</b></caption><tr><th onclick="sortTable('table270', 0)">ID</th><th onclick="sortTable('table270', 1)">Ref_currency_code</th><th onclick="sortTable('table270', 2)">Ref_currency_id</th><th onclick="sortTable('table270', 3)">Ref_currency_name</th><th onclick="sortTable('table270', 4)">Ref_currency_country_id</th><th onclick="sortTable('table270', 5)">Trans_currency_name</th><th onclick="sortTable('table270', 6)">Trans_currency_code</th><th onclick="sortTable('table270', 7)">Trans_currency_id</th><th onclick="sortTable('table270', 8)">Ref_currency_country</th></tr><tr><td>29</td><td>USD</td><td>1</td><td>US Dollar</td><td>6</td><td>US Dollar</td><td>USD</td><td>1</td><td>23</td></tr><tr><td>30</td><td>EUR</td><td>2</td><td>Euro</td><td>4</td><td>Euro</td><td>EUR</td><td>2</td><td>24</td></tr><tr><td>31</td><td>JPY</td><td>3</td><td>Japanese Yen</td><td>5</td><td>Japanese Yen</td><td>JPY</td><td>3</td><td>25</td></tr></table><table id="table271" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Ref_strategy</b></caption><tr><th onclick="sortTable('table271', 0)">ID</th><th onclick="sortTable('table271', 1)">Portfolio_strategy_description</th><th onclick="sortTable('table271', 2)">Portfolio_strategy_id</th><th onclick="sortTable('table271', 3)">Ref_strategy_name</th><th onclick="sortTable('table271', 4)">Ref_strategy_id</th><th onclick="sortTable('table271', 5)">Portfolio_strategy_name</th><th onclick="sortTable('table271', 6)">Ref_strategy_description</th></tr><tr><td>32</td><td>Strategy1</td><td>1</td><td>Strat1</td><td>1</td><td>Strat1</td><td>Strategy1</td></tr><tr><td>33</td><td>Strategy2</td><td>2</td><td>Strat2</td><td>2</td><td>Strat2</td><td>Strategy2</td></tr><tr><td>34</td><td>Strategy3</td><td>3</td><td>Strat3</td><td>3</td><td>Strat3</td><td>Strategy3</td></tr><tr><td>35</td><td>Strategy5</td><td>5</td><td>Strat5</td><td>5</td><td>Strat5</td><td>Strategy5</td></tr><tr><td>36</td><td>Strategy4</td><td>4</td><td>Strat4</td><td>4</td><td>Strat4</td><td>Strategy4</td></tr></table><table id="table272" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Trans_transaction</b></caption><tr><th onclick="sortTable('table272', 0)">ID</th><th onclick="sortTable('table272', 1)">Trans_transaction_price</th><th onclick="sortTable('table272', 2)">Trans_transaction_currency_id</th><th onclick="sortTable('table272', 3)">Trans_transaction_asset_id</th><th onclick="sortTable('table272', 4)">Trans_transaction_quantity</th><th onclick="sortTable('table272', 5)">Trans_transaction_date</th><th onclick="sortTable('table272', 6)">Trans_transaction_buy_sell_ind</th><th onclick="sortTable('table272', 7)">Trans_transaction_portfolio_id</th><th onclick="sortTable('table272', 8)">Trans_transaction_id</th><th onclick="sortTable('table272', 9)">Trans_transaction_asset</th><th onclick="sortTable('table272', 10)">Trans_transaction_currency</th></tr><tr><td>37</td><td>5.51</td><td>2</td><td>1</td><td>200</td><td>1/1/2011</td><td>buy</td><td>1</td><td>1</td><td>13</td><td>30</td></tr><tr><td>38</td><td>5.5</td><td>2</td><td>1</td><td>100</td><td>6/1/2011</td><td>sell</td><td>1</td><td>2</td><td>13</td><td>30</td></tr><tr><td>39</td><td>2.5</td><td>1</td><td>3</td><td>150</td><td>9/1/2013</td><td>buy</td><td>2</td><td>3</td><td>14</td><td>29</td></tr><tr><td>40</td><td>3.5</td><td>1</td><td>3</td><td>150</td><td>3/1/2014</td><td>sell</td><td>2</td><td>4</td><td>14</td><td>29</td></tr><tr><td>41</td><td>1.6</td><td>3</td><td>5</td><td>200</td><td>2/1/2013</td><td>buy</td><td>3</td><td>5</td><td>15</td><td>31</td></tr><tr><td>42</td><td>1.5</td><td>3</td><td>5</td><td>100</td><td>7/1/2013</td><td>sell</td><td>3</td><td>6</td><td>15</td><td>31</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance Output</h3><div><table id="table273" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>asset</b></caption><tr><th onclick="sortTable('table273', 0)">ID</th><th onclick="sortTable('table273', 1)">id</th><th onclick="sortTable('table273', 2)">description</th><th onclick="sortTable('table273', 3)">name</th><th onclick="sortTable('table273', 4)">strategy_id</th><th onclick="sortTable('table273', 5)">asset_strategy</th></tr><tr><td>0</td><td>1</td><td>Asset1</td><td>A1</td><td>1</td><td>37</td></tr><tr><td>1</td><td>3</td><td>Asset3</td><td>A3</td><td>2</td><td>38</td></tr><tr><td>2</td><td>5</td><td>Asset5</td><td>A5</td><td>5</td><td>40</td></tr><tr><td>3</td><td>7</td><td>Asset7</td><td>A7</td><td>4</td><td>41</td></tr><tr><td>4</td><td>9</td><td>Asset9</td><td>A9</td><td>3</td><td>39</td></tr><tr><td>5</td><td>2</td><td>Asset2</td><td>A2</td><td>3</td><td>39</td></tr><tr><td>6</td><td>4</td><td>Asset4</td><td>A4</td><td>4</td><td>41</td></tr><tr><td>7</td><td>6</td><td>Asset6</td><td>A6</td><td>4</td><td>41</td></tr><tr><td>8</td><td>8</td><td>Asset8</td><td>A8</td><td>5</td><td>40</td></tr><tr><td>9</td><td>10</td><td>Asset10</td><td>A10</td><td>1</td><td>37</td></tr></table><table id="table274" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>client</b></caption><tr><th onclick="sortTable('table274', 0)">ID</th><th onclick="sortTable('table274', 1)">description</th><th onclick="sortTable('table274', 2)">name</th><th onclick="sortTable('table274', 3)">id</th></tr><tr><td>10</td><td>Tom Client</td><td>Tom</td><td>1</td></tr><tr><td>11</td><td>Dick Client</td><td>Dick</td><td>2</td></tr><tr><td>12</td><td>Harry Client</td><td>Harry</td><td>3</td></tr></table><table id="table275" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>country</b></caption><tr><th onclick="sortTable('table275', 0)">ID</th><th onclick="sortTable('table275', 1)">code</th><th onclick="sortTable('table275', 2)">name</th><th onclick="sortTable('table275', 3)">id</th></tr><tr><td>13</td><td>US</td><td>United States of America</td><td>6</td></tr><tr><td>14</td><td>EU</td><td>European Union</td><td>4</td></tr><tr><td>15</td><td>JP</td><td>Japan</td><td>5</td></tr><tr><td>16</td><td>AU</td><td>Australia</td><td>1</td></tr><tr><td>17</td><td>CH</td><td>Switzerland</td><td>2</td></tr><tr><td>18</td><td>CN</td><td>China</td><td>3</td></tr></table><table id="table276" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>currency</b></caption><tr><th onclick="sortTable('table276', 0)">ID</th><th onclick="sortTable('table276', 1)">code</th><th onclick="sortTable('table276', 2)">name</th><th onclick="sortTable('table276', 3)">id</th><th onclick="sortTable('table276', 4)">country_id</th><th onclick="sortTable('table276', 5)">currency_country</th></tr><tr><td>19</td><td>USD</td><td>US Dollar</td><td>1</td><td>6</td><td>13</td></tr><tr><td>20</td><td>EUR</td><td>Euro</td><td>2</td><td>4</td><td>14</td></tr><tr><td>21</td><td>JPY</td><td>Japanese Yen</td><td>3</td><td>5</td><td>15</td></tr></table><table id="table277" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>holding</b></caption><tr><th onclick="sortTable('table277', 0)">ID</th><th onclick="sortTable('table277', 1)">id</th><th onclick="sortTable('table277', 2)">asset_id</th><th onclick="sortTable('table277', 3)">currency_id</th><th onclick="sortTable('table277', 4)">purchase_price</th><th onclick="sortTable('table277', 5)">quantity</th><th onclick="sortTable('table277', 6)">purchase_date</th><th onclick="sortTable('table277', 7)">begin_date</th><th onclick="sortTable('table277', 8)">end_date</th><th onclick="sortTable('table277', 9)">holding_asset</th><th onclick="sortTable('table277', 10)">holding_currency</th></tr><tr><td>22</td><td>1</td><td>1</td><td>2</td><td>5.51</td><td>200</td><td>1/1/2011</td><td>1/1/2011</td><td>6/1/2011</td><td>0</td><td>20</td></tr><tr><td>23</td><td>2</td><td>1</td><td>2</td><td>5.1</td><td>100</td><td>1/1/2011</td><td>6/1/2011</td><td>?0</td><td>0</td><td>20</td></tr><tr><td>24</td><td>3</td><td>3</td><td>3</td><td>2.5</td><td>150</td><td>9/1/2013</td><td>9/1/2013</td><td>3/1/2014</td><td>1</td><td>21</td></tr><tr><td>25</td><td>4</td><td>5</td><td>1</td><td>1.6</td><td>200</td><td>2/1/2013</td><td>2/1/2013</td><td>7/1/2013</td><td>2</td><td>19</td></tr><tr><td>26</td><td>5</td><td>5</td><td>1</td><td>1.6</td><td>100</td><td>2/1/2013</td><td>7/1/2013</td><td>?1</td><td>2</td><td>19</td></tr></table><table id="table278" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>portfolio</b></caption><tr><th onclick="sortTable('table278', 0)">ID</th><th onclick="sortTable('table278', 1)">name</th><th onclick="sortTable('table278', 2)">description</th><th onclick="sortTable('table278', 3)">id</th><th onclick="sortTable('table278', 4)">strategy_id</th><th onclick="sortTable('table278', 5)">parent_portfolio_id</th><th onclick="sortTable('table278', 6)">parent</th><th onclick="sortTable('table278', 7)">portfolio_strategy</th></tr><tr><td>27</td><td>Port1</td><td>Portfolio1</td><td>1</td><td>2</td><td>1</td><td>27</td><td>38</td></tr><tr><td>28</td><td>Port2</td><td>Portfolio2</td><td>2</td><td>2</td><td>2</td><td>28</td><td>38</td></tr><tr><td>29</td><td>Port3</td><td>Portfolio3</td><td>3</td><td>1</td><td>2</td><td>28</td><td>37</td></tr></table><table id="table279" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>portfolioholding</b></caption><tr><th onclick="sortTable('table279', 0)">ID</th><th onclick="sortTable('table279', 1)">id</th><th onclick="sortTable('table279', 2)">holding_id</th><th onclick="sortTable('table279', 3)">client_id</th><th onclick="sortTable('table279', 4)">portfolio_id</th><th onclick="sortTable('table279', 5)">portfolioholding_client</th><th onclick="sortTable('table279', 6)">portfolioholding_holding</th><th onclick="sortTable('table279', 7)">portfolioholding_portfolio</th></tr><tr><td>30</td><td>5</td><td>1</td><td>1</td><td>1</td><td>10</td><td>22</td><td>27</td></tr><tr><td>31</td><td>0</td><td>2</td><td>1</td><td>1</td><td>10</td><td>23</td><td>27</td></tr><tr><td>32</td><td>2</td><td>3</td><td>2</td><td>3</td><td>11</td><td>24</td><td>29</td></tr><tr><td>33</td><td>7</td><td>4</td><td>2</td><td>3</td><td>11</td><td>25</td><td>29</td></tr><tr><td>34</td><td>4</td><td>5</td><td>2</td><td>3</td><td>11</td><td>26</td><td>29</td></tr></table><table id="table280" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>position</b></caption><tr><th onclick="sortTable('table280', 0)">ID</th><th onclick="sortTable('table280', 1)">quantity</th><th onclick="sortTable('table280', 2)">current_value</th><th onclick="sortTable('table280', 3)">cost_basis</th><th onclick="sortTable('table280', 4)">id</th><th onclick="sortTable('table280', 5)">client_id</th><th onclick="sortTable('table280', 6)">asset_id</th><th onclick="sortTable('table280', 7)">current_value_currency_id</th><th onclick="sortTable('table280', 8)">cost_basis_currency_id</th><th onclick="sortTable('table280', 9)">position_asset</th><th onclick="sortTable('table280', 10)">position_client</th><th onclick="sortTable('table280', 11)">position_cost_basis_currency</th><th onclick="sortTable('table280', 12)">position_current_value_currency</th></tr><tr><td>35</td><td>100</td><td>550</td><td>551</td><td>1</td><td>1</td><td>1</td><td>2</td><td>2</td><td>0</td><td>10</td><td>20</td><td>20</td></tr><tr><td>36</td><td>100</td><td>170</td><td>160</td><td>2</td><td>2</td><td>5</td><td>3</td><td>3</td><td>2</td><td>11</td><td>21</td><td>21</td></tr></table><table id="table281" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>strategy</b></caption><tr><th onclick="sortTable('table281', 0)">ID</th><th onclick="sortTable('table281', 1)">name</th><th onclick="sortTable('table281', 2)">description</th><th onclick="sortTable('table281', 3)">id</th></tr><tr><td>37</td><td>Strat1</td><td>Strategy1</td><td>1</td></tr><tr><td>38</td><td>Strat2</td><td>Strategy2</td><td>2</td></tr><tr><td>39</td><td>Strat3</td><td>Strategy3</td><td>3</td></tr><tr><td>40</td><td>Strat5</td><td>Strategy5</td><td>5</td></tr><tr><td>41</td><td>Strat4</td><td>Strategy4</td><td>4</td></tr></table><table id="table282" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>transaction</b></caption><tr><th onclick="sortTable('table282', 0)">ID</th><th onclick="sortTable('table282', 1)">id</th><th onclick="sortTable('table282', 2)">asset_id</th><th onclick="sortTable('table282', 3)">buy_sell_ind</th><th onclick="sortTable('table282', 4)">quantity</th><th onclick="sortTable('table282', 5)">price</th><th onclick="sortTable('table282', 6)">currency_id</th><th onclick="sortTable('table282', 7)">portfolio_id</th><th onclick="sortTable('table282', 8)">date</th><th onclick="sortTable('table282', 9)">transaction_asset</th><th onclick="sortTable('table282', 10)">transaction_currency</th><th onclick="sortTable('table282', 11)">transaction_portfolio</th></tr><tr><td>42</td><td>1</td><td>1</td><td>buy</td><td>200</td><td>5.51</td><td>2</td><td>1</td><td>1/1/2011</td><td>0</td><td>20</td><td>27</td></tr><tr><td>43</td><td>2</td><td>1</td><td>sell</td><td>100</td><td>5.5</td><td>2</td><td>1</td><td>6/1/2011</td><td>0</td><td>20</td><td>27</td></tr><tr><td>44</td><td>3</td><td>3</td><td>buy</td><td>150</td><td>2.5</td><td>1</td><td>2</td><td>9/1/2013</td><td>1</td><td>19</td><td>28</td></tr><tr><td>45</td><td>4</td><td>3</td><td>sell</td><td>150</td><td>3.5</td><td>1</td><td>2</td><td>3/1/2014</td><td>1</td><td>19</td><td>28</td></tr><tr><td>46</td><td>5</td><td>5</td><td>buy</td><td>200</td><td>1.6</td><td>3</td><td>3</td><td>2/1/2013</td><td>2</td><td>21</td><td>29</td></tr><tr><td>47</td><td>6</td><td>5</td><td>sell</td><td>100</td><td>1.5</td><td>3</td><td>3</td><td>7/1/2013</td><td>2</td><td>21</td><td>29</td></tr></table></div><br style="clear:both;"/></body></html>

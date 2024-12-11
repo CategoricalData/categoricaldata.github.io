@@ -1,0 +1,291 @@
+<!DOCTYPE HTML>
+<html  lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CD4ENCFV58"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-64DRFX06T1"></script>
+<script >
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-64DRFX06T1');
+</script>
+<title>CQL</title>
+<link rel="shortcut icon" href="../favicon.ico" >
+<link rel="StyleSheet" href="css/nstyle.css" type="text/css" media="all" > 
+<meta charset="utf-8">
+<meta name="keywords" content="CQL,SQL,Data Integration, Data Migration, Category Theory, ETL" >
+<meta name="description" content="Conexus CQL" >
+<meta name="keywords" content="CQL, functorial, category theory, data integration, data migration, categorical databases, SQL, categorical query language" >
+</head>
+<body>
+<div id="content">
+<h1>Categorical Databases<img src="logo.png" height="32" style="float: right;" alt="logo" ></h1>
+<a href="https://categoricaldata.net">Home</a> | 
+<a href="download.html">Download</a> | 
+<a href="examples.html">Getting Started</a> | 
+<a href="help/index.html" target="_blank">Manual</a> |
+<a href="https://github.com/CategoricalData/CQL/wiki" target="_blank">Wiki</a> |
+<a href="papers.html">Papers</a> |
+<a href="screens.html">Screen Shots</a> |
+<a href="https://github.com/categoricalData" target="_blank">Github</a> |
+<a href="https://groups.google.com/forum/#!forum/categoricaldata" target="_blank">Google Group</a> |
+<a href="https://conexus.com" target="_blank">Conexus</a> |
+<a href="mailto:info@conexus.com">Contact</a> 
+<br><br>
+<hr>
+	        
+		<h2>Tutorial</h2>
+		
+			<p> This online CQL tutorial is built-in to the IDE as the Tutorial example.
+			    Readers are encouraged to use the IDE while reading the tutorial.
+			</p>
+			
+			<p> Jump to section: <a href="#typesides">Typesides</a>, 
+				<a href="#schemas">Schemas</a>, <a href="#instances">Instances</a>, 
+				<a href="#mappings">Mappings</a>, 
+				<a href="#fdm">Delta and Sigma</a>, 
+				<a href="#uberflowers">Uber-flowers</a>.
+			</p>	  
+	
+		<hr> <div id="typesides">
+		<h2>Typesides</h2>
+			<p>Every CQL file begins with a <b>typeside</b>.  
+				The typeside for this tutorial contains two <b>java_types</b>: <i>String</i>, 
+				which is bound to <i>java.lang.String</i>;
+				and <i>Integer</i>, which is bound to <i>java.lang.Integer</i>.  The
+				<b>java_constants</b> section defines, for each java_type, javascript code that
+				creates a value of that type from a string.  For example, when the string
+				100 is encountered in an CQL program and needs to be interpreted as an
+				<i>Integer</i>, CQL will execute the <i>parseInt</i> function on the
+				string 100, yielding a <i>java.lang.Integer</i>.  Similarly, the 
+				<b>java_functions</b> section defines the <i>plus</i> function. 	
+			</p></div>
+<pre>
+typeside Ty = literal {
+	java_types
+		Integer = "java.lang.Integer"
+		String = "java.lang.String"
+	java_constants
+		Integer = "return java.lang.Integer.parseInt(input[0])"
+		String = "return input[0]"
+	java_functions
+		plus : Integer, Integer -> Integer = "return (input[0] + input[1]).intValue()"
+}
+</pre>
+<hr>
+	<div id="schemas">
+	<h2>Schemas</h2>
+
+		<p>A <b>schema</b> on a typeside <i>Ty</i> contains a set of <b>entities</b>, a set
+			of <b>attributes</b> taking entities to types, a set of <b>foreign_keys</b>
+			taking entities to entities, a set of <b>path_equations</b> between paths of foreign_keys,
+			and a set of <b>observation_equations</b> between attributes and foreign_keys. 
+		</p>
+		<p> In the following schema, the entities are <i>Employee</i>s and <i>Department</i>.
+			The <i>manager</i> foreign_key takes every <i>Employee</i> to their manager, and similarly
+			for <i>worksIn</i> and <i>secretary</i>.  The path_equations state that every 
+			<i>Employee</i> <i>e</i>'s <i>manager</i> 
+			<i>worksIn</i> the <i>Department</i> which <i>e</i> works in, and that every
+			<i>Department</i> <i>d</i>'s <i>secretary</i>
+			<i>worksIn</i> <i>d</i>.
+		</p>   	
+		<p>The <i>name</i> attribute takes every <i>Department</i>
+			to its name and similarly for <i>first, last, age, cummulative_age</i>.  
+			The observation_equations state that every <i>Employee</i> <i>e</i>'s 
+			<i>commulative_age</i> is the sum of <i>e</i>'s <i>age</i> and <i>e</i>'s
+			<i>manager</i>'s <i>age</i>.
+		</p>	</div>
+<pre>
+schema S = literal : Ty {
+	entities
+		Department Employee
+	foreign_keys
+		manager : Employee -> Employee
+		secretary : Department -> Employee
+		worksIn : Employee -> Department
+	path_equations
+		Department.secretary.worksIn = Department
+		Employee.manager.worksIn = Employee.worksIn
+	attributes
+		age : Employee -> Integer
+		cummulative_age : Employee -> Integer
+		first : Employee -> String
+		last : Employee -> String
+		name : Department -> String
+	observation_equations
+		forall e. cummulative_age(e) = plus(age(e), age(manager(e)))
+	options
+		program_allow_nontermination_unsafe = true}
+</pre>
+<hr> <div id="instances">
+	<h2>Instances</h2>
+
+		<p>An <b>instance</b> on a schema <i>S</i> contains a set of <b>generators</b>
+			and a set of variable-free <b>equations</b> between those generators. 
+			In this example, there are three generating <i>Employee</i>s: <i>a,b,c</i>, 
+			and two generating <i>Department</i>s: <i>m,s</i>.  The <b>equations</b> specify,
+			for example, that the <i>name</i> of <i>m</i> is <i>Math</i>.  The IDE
+			shows the tables generated by this instance.
+		</p>	
+		<p>Note that the IDs in the
+			tables do not directly correspond to the generators: CQL chooses 
+			IDs non-deterministically (e.g. <i>c</i> does not appear in the instance,
+			but <i>b.manager</i> does).  Note also that the tables contain nulls: 
+			<i>a.last</i>, for example.  Finally, note that
+			the <i>cummulative_age</i> attribute is automatically populated in the tables.
+		</p>	
+		<p>Tables can be sorted by clicking on their column headers.</p>
+		</div>
+<pre>
+instance I = literal : S {
+	generators
+		m s : Department
+		a b c : Employee
+	equations
+		age(a) = 1                            age(a) = age(c)                       age(b) = 5                            
+		first(a) = Al                         first(b) = Bob                        first(c) = Carl                       
+		last(b) = Bo                          manager(a) = a                        manager(b) = c                        
+		manager(c) = c                        name(m) = Math                        name(s) = CS                          
+		secretary(m) = a                      secretary(s) = c                      secretary(worksIn(a)) = manager(a)    
+		worksIn(a) = m                        worksIn(a) = worksIn(manager(a))      worksIn(b) = s                        
+		worksIn(c) = s                        
+
+	options
+		prover_simplify_max = 64}
+</pre>
+<div><table id="table0" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px"  ><caption><b>Department</b></caption><tr><th onclick="sortTable('table0', 0)">ID</th><th onclick="sortTable('table0', 1)">name</th><th onclick="sortTable('table0', 2)">secretary</th></tr><tr><td>0</td><td>Math</td><td>2</td></tr><tr><td>1</td><td>CS</td><td>4</td></tr></table><table id="table1" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px"  ><caption><b>Employee</b></caption><tr><th onclick="sortTable('table1', 0)">ID</th><th onclick="sortTable('table1', 1)">age</th><th onclick="sortTable('table1', 2)">cummulative_age</th><th onclick="sortTable('table1', 3)">first</th><th onclick="sortTable('table1', 4)">last</th><th onclick="sortTable('table1', 5)">manager</th><th onclick="sortTable('table1', 6)">worksIn</th></tr><tr><td>2</td><td>1</td><td>2</td><td>Al</td><td>?0</td><td>2</td><td>0</td></tr><tr><td>3</td><td>5</td><td>6</td><td>Bob</td><td>Bo</td><td>4</td><td>1</td></tr><tr><td>4</td><td>1</td><td>2</td><td>Carl</td><td>?1</td><td>4</td><td>1</td></tr></table></div><br style="clear:both;">
+<hr> <div id="mappings">
+	<h2>Mappings</h2>
+
+	<p>An <b>mapping</b> from schema <i>C</i> to schema <i>D</i> takes each entity in <i>C</i>
+		to an entity <i>D</i>, each foreign_key in <i>C</i> to a path of foreign_keys in <i>D</i>,
+		and each attribute in <i>C</i> to a lambda expression in <i>D</i> (which may be abbreviated as a path).  In this example, the 
+		two entities <i>N1,N2</i> are taken to <i>N</i>, the foreign_key <i>f</i> is taken to the 
+		zero-length path on <i>N</i>, and the attribute <i>age</i> is taken to <i>age</i>.  We also
+		define an instance on <i>D</i> which will be used later.
+	</p>
+<pre>
+schema C = literal : Ty {
+	entities
+		N1 N2
+	foreign_keys
+		f : N1 -> N2
+	attributes
+		age : N2 -> Integer
+		name : N1 -> String
+		salary : N1 -> Integer}
+</pre>
+<pre>
+schema D = literal : Ty {
+	entities
+		N
+	attributes
+		age : N -> Integer
+		name : N -> String
+		salary : N -> Integer}
+</pre>
+<pre>
+mapping F = literal : C -> D {
+	entity
+		N1 -> N
+	foreign_keys
+		f -> identity
+	attributes
+		name -> lambda _x. name(_x)
+		salary -> lambda x. salary(x)
+	entity
+		N2 -> N
+	attributes
+		age -> lambda x. age(x)}
+</pre>
+<p>  We also define an instance on <i>D</i> which will be used later. </p> </div>
+<pre>
+instance J = literal : D {
+	generators
+		one three two : N
+	equations
+		age(one) = 20                   age(three) = 30                 age(two) = 20                   
+		name(one) = Alice               name(three) = Sue               name(two) = Bob                 
+		salary(one) = 100               salary(three) = 300             salary(two) = 250}
+</pre>
+<div><table id="table2" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px"  ><caption><b>N</b></caption><tr><th onclick="sortTable('table2', 0)">ID</th><th onclick="sortTable('table2', 1)">age</th><th onclick="sortTable('table2', 2)">name</th><th onclick="sortTable('table2', 3)">salary</th></tr><tr><td>0</td><td>30</td><td>Sue</td><td>300</td></tr><tr><td>1</td><td>20</td><td>Bob</td><td>250</td></tr><tr><td>2</td><td>20</td><td>Alice</td><td>100</td></tr></table></div><br style="clear:both;">
+<hr> <div id="fdm" >
+	<h2>Delta and Sigma</h2>
+
+	<p>Given a mapping <i>F</i> from schema <i>C</i> to schema <i>D</i>, the <b>delta</b>
+		operation converts instances on <i>D</i> to instances on <i>C</i>.  It can be thought
+		of as projection:
+	</p>
+<pre>
+instance deltaFJ = delta F J
+</pre>
+<div><table id="table3" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px"  ><caption><b>N1</b></caption><tr><th onclick="sortTable('table3', 0)">ID</th><th onclick="sortTable('table3', 1)">name</th><th onclick="sortTable('table3', 2)">salary</th><th onclick="sortTable('table3', 3)">f</th></tr><tr><td>0</td><td>Sue</td><td>300</td><td>3</td></tr><tr><td>1</td><td>Bob</td><td>250</td><td>4</td></tr><tr><td>2</td><td>Alice</td><td>100</td><td>5</td></tr></table><table id="table4" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px"  ><caption><b>N2</b></caption><tr><th onclick="sortTable('table4', 0)">ID</th><th onclick="sortTable('table4', 1)">age</th></tr><tr><td>3</td><td>30</td></tr><tr><td>4</td><td>20</td></tr><tr><td>5</td><td>20</td></tr></table></div><br style="clear:both;">
+<p>Given a mapping <i>F</i> from schema <i>C</i> to schema <i>D</i>, the <b>sigma</b>
+		operation converts instances on <i>C</i> to instances on <i>D</i>.  It can be thought
+		of as union, followed by merge.  In this example, sigma undoes delta:
+	</p>	</div>
+<pre>
+instance sigmaFdeltaFJ = sigma F deltaFJ
+</pre>
+<div><table id="table5" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px"  ><caption><b>N</b></caption><tr><th onclick="sortTable('table5', 0)">ID</th><th onclick="sortTable('table5', 1)">age</th><th onclick="sortTable('table5', 2)">name</th><th onclick="sortTable('table5', 3)">salary</th></tr><tr><td>0</td><td>20</td><td>Alice</td><td>100</td></tr><tr><td>1</td><td>20</td><td>Bob</td><td>250</td></tr><tr><td>2</td><td>30</td><td>Sue</td><td>300</td></tr></table></div><br style="clear:both;">
+<hr> <div id="uberflowers">
+	<h2>Uber-flowers (From-Where) queries</h2>
+
+	<p> In addition to mappings, so-called uber-flower <b>queries</b> can be used to define
+		relationships between schemas and to migrate data from one schema to another.  Such
+		queries can be <b>evaluated</b>, providing a similar semantics to SQL.  However, 
+		unlike SQL, CQL guarantees, at compile time, that queries can only result in instances
+		which obey their data integrity constraints.
+	</p>
+	<p> A query from schema <i>C</i> to schema <i>D</i> specifies, for each entity <i>d</i>
+		 in <i>D</i>, a from-where-return statement that defines how <i>d</i> is to be
+		populated.  In addition, a query specifies how the foreign keys in <i>D</i> must be 
+		populated.  Here is a query corresponding to the previous section's delta; it does
+		not require any where clauses.  The block corresponding to foreign key <i>f</i>
+		says that for each <i>x</i> inserted into <i>N1</i>, the <i>y</i> to which <i>x</i>
+		should be sent to by <i>f</i> is <i>x</i>.  In general, the foreign_keys
+		part of a query is the most difficult part to write and should be attempted only
+		after writing the entities part.		
+	</p>
+<pre>
+query deltaFAsQuery = literal : D -> C {
+entity N2 -> { 
+	from 
+		y : N
+	attributes
+		age -> age(y)}
+	
+entity N1 -> { 
+	from 
+		x : N
+	attributes
+		name -> name(x)
+		salary -> salary(x)
+	foreign_keys
+		f -> {y -> x options }}}
+</pre>
+<pre>
+instance deltaFJ_prime = eval deltaFAsQuery J
+</pre>
+<div><table id="table6" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px"  ><caption><b>N1</b></caption><tr><th onclick="sortTable('table6', 0)">ID</th><th onclick="sortTable('table6', 1)">name</th><th onclick="sortTable('table6', 2)">salary</th><th onclick="sortTable('table6', 3)">f</th></tr><tr><td>0</td><td>Sue</td><td>300</td><td>3</td></tr><tr><td>1</td><td>Bob</td><td>250</td><td>4</td></tr><tr><td>2</td><td>Alice</td><td>100</td><td>5</td></tr></table><table id="table7" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px"  ><caption><b>N2</b></caption><tr><th onclick="sortTable('table7', 0)">ID</th><th onclick="sortTable('table7', 1)">age</th></tr><tr><td>3</td><td>30</td></tr><tr><td>4</td><td>20</td></tr><tr><td>5</td><td>20</td></tr></table></div><br style="clear:both;">
+<br>
+<p>Here is a query corresponding to the previous section's sigma: </p>
+<pre>
+query sigmaFAsQuery = literal : C -> D {
+entity N -> { 
+	from 
+		n1 : N1
+	attributes
+		age -> age(f(n1))
+		name -> name(n1)
+		salary -> salary(n1)}}
+</pre>
+<pre>
+instance sigmaFdeltaFJ_prime = eval sigmaFAsQuery deltaFJ_prime
+</pre>
+<div><table id="table8" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px"  ><caption><b>N</b></caption><tr><th onclick="sortTable('table8', 0)">ID</th><th onclick="sortTable('table8', 1)">age</th><th onclick="sortTable('table8', 2)">name</th><th onclick="sortTable('table8', 3)">salary</th></tr><tr><td>0</td><td>30</td><td>Sue</td><td>300</td></tr><tr><td>1</td><td>20</td><td>Bob</td><td>250</td></tr><tr><td>2</td><td>20</td><td>Alice</td><td>100</td></tr></table></div><br style="clear:both;">
+</div>
+</div></body></html>
+

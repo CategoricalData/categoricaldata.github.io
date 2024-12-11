@@ -1,0 +1,20 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><h1>mapping getMapping</h1>
+<pre>
+typeside t
+schema s : t
+schema_colimit sc : {}
+----------------------------------
+mapping (getMapping coproduct s : t s) : s -&gt; getSchema coproduct s : t
+	</pre>
+Get the mapping to an input schema in a schema colimit.
+<br/><br/>Appears in:<br/><br/>
+<a href="Dataversity.html" target="primary">Dataversity</a><br />
+<a href="Demo.html" target="primary">Demo</a><br /><br/>Options:<br/><br/><a href="always_reload.html" target="primary">always_reload</a>
+<br/>
+<a href="num_threads.html" target="primary">num_threads</a>
+<br/>
+<a href="talg_reduction.html" target="primary">talg_reduction</a>
+<br/>
+<a href="timeout.html" target="primary">timeout</a>
+</html>

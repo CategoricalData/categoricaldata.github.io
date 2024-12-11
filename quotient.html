@@ -1,0 +1,125 @@
+<!DOCTYPE HTML>
+<html  lang="en">
+<head>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CD4ENCFV58"></script>
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-64DRFX06T1"></script>
+<script >
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-64DRFX06T1');
+</script>
+<title>CQL</title>
+<link rel="shortcut icon" href="../favicon.ico" >
+<link rel="StyleSheet" href="css/nstyle.css" type="text/css" media="all" > 
+<meta charset="utf-8">
+<meta name="keywords" content="CQL,SQL,Data Integration, Data Migration, Category Theory, ETL" >
+<meta name="description" content="Conexus CQL" >
+<meta name="keywords" content="CQL, functorial, category theory, data integration, data migration, categorical databases, SQL, categorical query language" >
+</head>
+<body>
+<div id="content">
+<h1>Categorical Databases<img src="logo.png" height="32" style="float: right;" alt="logo" ></h1>
+<a href="https://categoricaldata.net">Home</a> | 
+<a href="download.html">Download</a> | 
+<a href="examples.html">Getting Started</a> | 
+<a href="help/index.html" target="_blank">Manual</a> |
+<a href="https://github.com/CategoricalData/CQL/wiki" target="_blank">Wiki</a> |
+<a href="papers.html">Papers</a> |
+<a href="screens.html">Screen Shots</a> |
+<a href="https://github.com/categoricalData" target="_blank">Github</a> |
+<a href="https://groups.google.com/forum/#!forum/categoricaldata" target="_blank">Google Group</a> |
+<a href="https://conexus.com" target="_blank">Conexus</a> |
+<a href="mailto:info@conexus.com">Contact</a> 
+<br><br>
+<hr>
+	<h2>Quotients and Merging</h2> 
+					
+					<p>Computing the quotient of a set by an equivalence relation (a so-called tuple merge) is a common data integration operation that is unwieldly in SQL but is easy in CQL, as we demonstrate below (built-in to the IDE with example name Quotient). 
+					</p>
+					<p>The example defines a source schema about people and who likes whom and a target schema with a single entity representing groups connected by liking.  There is a single schema mapping from the source to the target, and CQL's sigma  operation along this mapping computes the connected groups.					
+					</p>
+					
+					<p>We start by defining a source schema for people and who likes whom.  For brevity, we do not define any types (String, Integer, etc) and use the empty typeside:
+					</p>
+				
+<pre>typeside Ty = empty
+
+schema Likes = literal : Ty {
+	entities
+		Like 
+		Person
+	foreign_keys
+		likee : Like -> Person
+		liker : Like -> Person
+}</pre>
+
+<br>
+					<p>Here is some sample data, taken from a popular TV show:
+					</p>
+				
+<pre>instance SimpsonsLikes = literal : Likes {
+	generators
+		Ned Maud Rodd Todd MrBurns Smithers : Person
+		l1 l2 l3 l4 : Like
+	equations
+		l1.liker = Ned  l1.likee = Maud
+		l2.liker = Maud l2.likee = Rodd
+		l3.liker = Rodd l3.likee = Todd
+		
+		l4.liker = Smithers l4.likee = MrBurns
+}</pre>
+
+<img src="images/examples/quotient1.png" alt="quotient1" width="700" >
+<br>
+
+					<p>Our goal is to group together all the people who are transitively connected by liking.  The target schema contains a single entity called Connection:
+					</p>
+				
+<pre>schema Connections = literal : Ty {
+	entities
+		Connection 
+}</pre>
+
+<br>
+					<p>Next, we define a schema mapping (in fact, the only mapping possible) from Likes to Connections: 
+					</p>
+					
+<pre>mapping FindConnections = literal : Likes -> Connections {
+	entities
+		Person -> Connection
+		Like   -> Connection
+	foreign_keys
+		likee  -> Connection
+		liker  -> Connection	
+}</pre>
+
+<br>
+				<p>To find the connected groups, we use CQL's sigma operation:   
+				</p>	
+					
+<pre>instance SimpsonsConnections = sigma FindConnections SimpsonsLikes
+</pre>
+	
+<br>
+				<p>The IDE reports that there are two groups, each of which is named by a particular representative of the group:
+				</p>
+				<img src="images/examples/quotient2.png" alt="quotient2" width="700" >
+
+				<p>To determine which group a person is in, we use CQL's unit operation:
+				</p>
+					
+<pre>transform whichConnection = unit FindConnections SimpsonsLikes
+</pre>
+	
+<img src="images/examples/quotient3.png" alt="quotient3" width="700" >
+<p>A screen shot of the entire development is shown below:</p>
+<img src="images/examples/quotient4.png" alt="quotient4" width="700" >
+
+				
+	</div><!--close main-->
+	 
+</body>
+</html>

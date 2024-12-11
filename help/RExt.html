@@ -1,0 +1,192 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example RExt</h1><pre>
+options
+	dont_validate_unsafe = true
+	require_consistency=false
+
+typeside ty = literal {
+	external_types
+		Double -&gt; "java.lang.Double" 
+	external_parsers
+		Double -&gt; "x =&gt; new java.lang.Double(x)"
+	external_functions
+		plus : Double,Double -&gt; Double = "(x, y) =&gt; x + y"
+		neg : Double -&gt; Double = "x =&gt; -x"
+}
+
+schema S = literal : ty {
+	entities
+		s s0
+	foreign_keys
+		ss : s0 -&gt; s
+	
+}
+
+schema T = literal : ty {
+	entities
+		t1 t2 t3
+	foreign_keys
+		f : t1 -&gt; t3
+		g : t2 -&gt; t3
+		l : t1 -&gt; t1
+		h : t2 -&gt; t1
+	path_equations
+		t1 = t1.l
+	
+
+}
+
+schema U = literal : ty {
+	entities
+		u11 u12 u21 u22 u3 u3x
+	foreign_keys
+		f1 : u11 -&gt; u3
+		f2 : u12 -&gt; u3
+		f1x: u11 -&gt; u3x
+		f2x: u12 -&gt; u3x
+		h  : u21 -&gt; u11
+		l  : u11 -&gt; u11
+		g1 : u21 -&gt; u3
+		g2 : u22 -&gt; u3
+		h2 : u21 -&gt; u11
+		h3 : u22 -&gt; u12
+
+	path_equations
+		u11.l.l = u11.l
+
+	
+
+}
+
+query qUT = literal : U -&gt; T {
+	entity
+		t1 -&gt; {from u11:u11 u12:u12
+			   where u11.l.l.f1 = u12.f2   
+			   foreign_keys f -&gt; {u3 -&gt; u11.f1  u3x -&gt; u12.f2x}
+			  	 l -&gt; {u11 -&gt; u11  u12 -&gt; u12}
+			   }
+
+	entity
+		t2 -&gt; {from u21:u21 u22:u22
+			   where u21.g1 = u22.g2  u21.h2.l.l.f1 = u22.h3.f2
+			   foreign_keys g -&gt; {u3 -&gt; u21.g1  u3x -&gt; u21.h.f1x}
+							h -&gt; {u11 -&gt; u21.h2  u12 -&gt; u22.h3}
+			   }
+
+	entity
+		t3 -&gt; {from u3:u3 u3x:u3x}
+
+
+
+}
+
+query qTS = literal : T -&gt; S {
+	entity
+		s -&gt; {from t1:t1 t2:t2
+		      where t1.f = t2.g       
+		attributes }
+	entity
+		s0 -&gt; { from x:t2
+		          where x.h.f = x.g     
+	foreign_keys
+		ss -&gt; {t1 -&gt; x.h t2 -&gt; x }	}
+}
+query qUS = [qUT ; qTS]
+
+########
+
+query test1 = rext identity U identity U
+
+
+instance I = literal : U {
+	generators
+		u11:u11 u12:u12 u21:u21 u22:u22 u3:u3 u3x:u3x
+	equations
+		
+		u11.f1 = u3
+		u12.f2 = u3
+		u11.f1x = u3x
+		u12.f2x = u3x
+		u21.h = u11
+		u11.l = u11
+		u21.g1 = u3
+		u22.g2 = u3
+		u21.h2 = u11
+		u22.h3 = u12
+}
+
+instance J = eval qTS (eval qUT I)
+instance K = eval qUS I
+
+
+########################
+
+typeside Ty = literal {
+	types
+		Bool
+	constants
+		true false : Bool
+	functions
+		and : Bool, Bool -&gt; Bool
+	equations
+		and(true, true) = true
+		and(true, false)= false
+		and(false,false)= false
+		and(false,true) = false
+}
+
+schema SS = literal : Ty {
+	entities
+		E F
+	foreign_keys
+		f : E -&gt; F
+	attributes
+		att : E -&gt; Bool
+}
+
+instance II = literal : SS {
+	generators
+		e : E
+	equations
+		e.att=true
+}
+
+query QQ = literal : SS -&gt; SS {
+	entity
+		E -&gt; {from t:Bool x:E t2:Bool
+		 where x.att=t
+		attributes att -&gt; and(x.att,t) foreign_keys f -&gt; {y-&gt;x s-&gt;and(x.att,t2) t3-&gt;t2} }
+
+	entity
+		F -&gt; {from s:Bool y:E t3:Bool}
+}
+
+instance JJ = eval QQ II
+
+instance KK = coeval QQ II
+
+#transform t = unit_query Q I   INFINTE
+
+transform t2 = counit_query QQ II
+
+transform t3 = coeval QQ (identity II)
+
+query QQQQ = [QQ;QQ]
+
+instance A = eval QQQQ II
+instance B = eval QQ eval QQ II
+instance A2 = coeval QQQQ II
+instance B2 = coeval QQ coeval QQ II
+</pre> Keywords:<br/></br>			<a href="schemaschema_literal.html" >schema_literal</a><br />
+			<a href="instanceeval.html" >eval</a><br />
+			<a href="instanceinstance_literal.html" >instance_literal</a><br />
+			<a href="instancecoeval.html" >coeval</a><br />
+			<a href="queryquery_literal.html" >query_literal</a><br />
+			<a href="transformtransform_identity.html" >transform_identity</a><br />
+			<a href="transformcounit_query.html" >counit_query</a><br />
+			<a href="queryquery_compose.html" >query_compose</a><br />
+			<a href="typesidetypeside_literal.html" >typeside_literal</a><br />
+			<a href="queryquery_identity.html" >query_identity</a><br />
+<br/>Options:<br/></br>
+<br/></br>
+<hr/><h3>instance II</h3><div><table id="table572" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>E</b></caption><tr><th onclick="sortTable('table572', 0)">ID</th><th onclick="sortTable('table572', 1)">att</th><th onclick="sortTable('table572', 2)">f</th></tr><tr><td>0</td><td>true</td><td>1</td></tr></table><table id="table573" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>F</b></caption><tr><th onclick="sortTable('table573', 0)">ID</th></tr><tr><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance KK</h3><div><table id="table574" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>E</b></caption><tr><th onclick="sortTable('table574', 0)">ID</th><th onclick="sortTable('table574', 1)">att</th><th onclick="sortTable('table574', 2)">f</th></tr><tr><td>0</td><td>?0</td><td>1</td></tr></table><table id="table575" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>F</b></caption><tr><th onclick="sortTable('table575', 0)">ID</th></tr><tr><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance I</h3><div><table id="table576" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>u3</b></caption><tr><th onclick="sortTable('table576', 0)">ID</th></tr><tr><td>0</td></tr></table><table id="table577" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>u3x</b></caption><tr><th onclick="sortTable('table577', 0)">ID</th></tr><tr><td>1</td></tr></table><table id="table578" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>u11</b></caption><tr><th onclick="sortTable('table578', 0)">ID</th><th onclick="sortTable('table578', 1)">f1</th><th onclick="sortTable('table578', 2)">f1x</th><th onclick="sortTable('table578', 3)">l</th></tr><tr><td>2</td><td>0</td><td>1</td><td>2</td></tr></table><table id="table579" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>u12</b></caption><tr><th onclick="sortTable('table579', 0)">ID</th><th onclick="sortTable('table579', 1)">f2</th><th onclick="sortTable('table579', 2)">f2x</th></tr><tr><td>3</td><td>0</td><td>1</td></tr></table><table id="table580" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>u21</b></caption><tr><th onclick="sortTable('table580', 0)">ID</th><th onclick="sortTable('table580', 1)">g1</th><th onclick="sortTable('table580', 2)">h</th><th onclick="sortTable('table580', 3)">h2</th></tr><tr><td>4</td><td>0</td><td>2</td><td>2</td></tr></table><table id="table581" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>u22</b></caption><tr><th onclick="sortTable('table581', 0)">ID</th><th onclick="sortTable('table581', 1)">g2</th><th onclick="sortTable('table581', 2)">h3</th></tr><tr><td>5</td><td>0</td><td>3</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance JJ</h3><div><table id="table582" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>E</b></caption><tr><th onclick="sortTable('table582', 0)">ID</th><th onclick="sortTable('table582', 1)">att</th><th onclick="sortTable('table582', 2)">f</th></tr><tr><td>0</td><td>(true and true)</td><td>2</td></tr><tr><td>1</td><td>(true and true)</td><td>5</td></tr></table><table id="table583" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>F</b></caption><tr><th onclick="sortTable('table583', 0)">ID</th></tr><tr><td>2</td></tr><tr><td>3</td></tr><tr><td>4</td></tr><tr><td>5</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance A2</h3><div><table id="table584" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>E</b></caption><tr><th onclick="sortTable('table584', 0)">ID</th><th onclick="sortTable('table584', 1)">att</th><th onclick="sortTable('table584', 2)">f</th></tr><tr><td>0</td><td>?0</td><td>1</td></tr></table><table id="table585" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>F</b></caption><tr><th onclick="sortTable('table585', 0)">ID</th></tr><tr><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance K</h3><div><table id="table586" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>s</b></caption><tr><th onclick="sortTable('table586', 0)">ID</th></tr><tr><td>0</td></tr></table><table id="table587" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>s0</b></caption><tr><th onclick="sortTable('table587', 0)">ID</th><th onclick="sortTable('table587', 1)">ss</th></tr><tr><td>1</td><td>0</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance J</h3><div><table id="table588" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>s</b></caption><tr><th onclick="sortTable('table588', 0)">ID</th></tr><tr><td>0</td></tr></table><table id="table589" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>s0</b></caption><tr><th onclick="sortTable('table589', 0)">ID</th><th onclick="sortTable('table589', 1)">ss</th></tr><tr><td>1</td><td>0</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance B2</h3><div><table id="table590" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>E</b></caption><tr><th onclick="sortTable('table590', 0)">ID</th><th onclick="sortTable('table590', 1)">att</th><th onclick="sortTable('table590', 2)">f</th></tr><tr><td>0</td><td>?0</td><td>1</td></tr></table><table id="table591" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>F</b></caption><tr><th onclick="sortTable('table591', 0)">ID</th></tr><tr><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance A</h3><div><table id="table592" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>E</b></caption><tr><th onclick="sortTable('table592', 0)">ID</th><th onclick="sortTable('table592', 1)">att</th><th onclick="sortTable('table592', 2)">f</th></tr><tr><td>0</td><td>((true and true) and (true and true))</td><td>4</td></tr><tr><td>1</td><td>((true and true) and (true and true))</td><td>7</td></tr><tr><td>2</td><td>((true and true) and (true and true))</td><td>8</td></tr><tr><td>3</td><td>((true and true) and (true and true))</td><td>11</td></tr></table><table id="table593" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>F</b></caption><tr><th onclick="sortTable('table593', 0)">ID</th></tr><tr><td>4</td></tr><tr><td>5</td></tr><tr><td>6</td></tr><tr><td>7</td></tr><tr><td>8</td></tr><tr><td>9</td></tr><tr><td>10</td></tr><tr><td>11</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance B</h3><div><table id="table594" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>E</b></caption><tr><th onclick="sortTable('table594', 0)">ID</th><th onclick="sortTable('table594', 1)">att</th><th onclick="sortTable('table594', 2)">f</th></tr><tr><td>0</td><td>((true and true) and (true and true))</td><td>4</td></tr><tr><td>1</td><td>((true and true) and (true and true))</td><td>6</td></tr><tr><td>2</td><td>((true and true) and (true and true))</td><td>9</td></tr><tr><td>3</td><td>((true and true) and (true and true))</td><td>11</td></tr></table><table id="table595" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>F</b></caption><tr><th onclick="sortTable('table595', 0)">ID</th></tr><tr><td>4</td></tr><tr><td>5</td></tr><tr><td>6</td></tr><tr><td>7</td></tr><tr><td>8</td></tr><tr><td>9</td></tr><tr><td>10</td></tr><tr><td>11</td></tr></table></div><br style="clear:both;"/></body></html>

@@ -1,0 +1,24 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><h1>schema_colimit schema_colimit_literal</h1>
+<pre>
+graph g
+typeside t
+----------------------------------
+schema_colimit (literal g : t {})
+	</pre>
+Computes a colimit of schemas and mappings given by a graph.  The option static_typing when disabled causes CQL to type check the colimit at runtime rather than compile time.  This will reduce the number of transforms required to compute any particular colimit, at the cost of potential runtime failure.  See All_Syntax for an example.
+<br/><br/>Appears in:<br/><br/>
+<a href="GraphSchColim.html" target="primary">GraphSchColim</a><br /><br/>Options:<br/><br/><a href="allow_java_eqs_unsafe.html" target="primary">allow_java_eqs_unsafe</a>
+<br/>
+<a href="always_reload.html" target="primary">always_reload</a>
+<br/>
+<a href="left_bias.html" target="primary">left_bias</a>
+<br/>
+<a href="num_threads.html" target="primary">num_threads</a>
+<br/>
+<a href="simplify_names.html" target="primary">simplify_names</a>
+<br/>
+<a href="talg_reduction.html" target="primary">talg_reduction</a>
+<br/>
+<a href="timeout.html" target="primary">timeout</a>
+</html>

@@ -1,0 +1,80 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example PointsTo</h1><pre>
+#https://suif.stanford.edu/~courses/cs243/lectures/l12-handout.pdf
+
+typeside Domains = literal {
+	external_types 
+		V -&gt; "java.lang.Object"
+		H -&gt; "java.lang.Object"
+		F -&gt; "java.lang.Object"
+	external_parsers 
+		V -&gt; "x =&gt; x"
+		F -&gt; "x =&gt; x"
+		H -&gt; "x =&gt; x"
+}
+
+schema EDB = literal : Domains {
+	entities
+		vP0 assign store load 
+	attributes
+		v : vP0 -&gt; V	h : vP0 -&gt; H
+		v1: assign -&gt; V v2: assign -&gt; V
+		v1: store -&gt; V  f:store -&gt; F  v2: store-&gt;V	
+		v1: load -&gt; V   f:load -&gt; F   v2: load-&gt;V	
+
+}
+
+schema IDB = literal : Domains {
+	entities
+		vP hP 
+	attributes
+		v : vP -&gt; V	h : vP -&gt; H
+		h1: hP -&gt; H   f:hP-&gt;F  h2:hP-&gt;H
+}
+
+schema DB = literal : Domains {
+	imports EDB IDB
+}
+
+constraints Rules = literal : DB {
+	forall x:vP0 -&gt; exists y:vP where x.v = y.v  x.h = y.h
+
+	forall a:assign x:vP where a.v2 = x.v -&gt; 
+	exists unique z:vP where a.v1 = z.v  x.h = z.h
+
+	forall x:vP y:vP s:store where s.v1 = x.v  s.v2 = y.v -&gt; 
+	exists unique h:hP where h.h1 = x.h  h.h2 = y.h h.f = s.f
+
+	forall l:load x:vP k:hP where l.v1 = x.v  l.f = k.f -&gt; 
+	exists unique y:vP where y.v = l.v2  y.h = k.h2 
+}
+
+instance I = literal : DB {
+	generators
+		0 1 2 : vP0
+		3 : store
+		4 : load
+		5 6 7 8 9 A : assign
+	equations
+		0.v = "x" 0.h = "main@1"
+		1.v = "y" 1.h = "main@2"
+		2.v = "z" 2.h = "main@3"
+		3.v1= "c" 3.f = "f" 3.v2 = "d"
+		4.v1= "z" 4.f = "f" 4.v2 = "q"
+		5.v1= "a" 5.v2= "x"
+		6.v1= "b" 6.v2= "y"
+		7.v1= "c" 7.v2= "z"
+		8.v1= "d" 8.v2= "x"
+		9.v1= "c" 9.v2= "a"
+		A.v1= "d" A.v2= "b"
+}
+
+instance J = chase Rules I
+</pre> Keywords:<br/></br>			<a href="schemaschema_literal.html" >schema_literal</a><br />
+			<a href="constraintsconstraints_literal.html" >constraints_literal</a><br />
+			<a href="typesidetypeside_literal.html" >typeside_literal</a><br />
+			<a href="instancechase.html" >chase</a><br />
+			<a href="instanceinstance_literal.html" >instance_literal</a><br />
+<br/>Options:<br/></br>
+<br/></br>
+<hr/><h3>instance I</h3><div><table id="table489" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>assign</b></caption><tr><th onclick="sortTable('table489', 0)">ID</th><th onclick="sortTable('table489', 1)">v1</th><th onclick="sortTable('table489', 2)">v2</th></tr><tr><td>0</td><td>a</td><td>x</td></tr><tr><td>1</td><td>b</td><td>y</td></tr><tr><td>2</td><td>c</td><td>z</td></tr><tr><td>3</td><td>d</td><td>x</td></tr><tr><td>4</td><td>c</td><td>a</td></tr><tr><td>5</td><td>d</td><td>b</td></tr></table><table id="table490" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>hP</b></caption><tr><th onclick="sortTable('table490', 0)">ID</th><th onclick="sortTable('table490', 1)">h1</th><th onclick="sortTable('table490', 2)">f</th><th onclick="sortTable('table490', 3)">h2</th></tr></table><table id="table491" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>load</b></caption><tr><th onclick="sortTable('table491', 0)">ID</th><th onclick="sortTable('table491', 1)">v1</th><th onclick="sortTable('table491', 2)">f</th><th onclick="sortTable('table491', 3)">v2</th></tr><tr><td>6</td><td>z</td><td>f</td><td>q</td></tr></table><table id="table492" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>store</b></caption><tr><th onclick="sortTable('table492', 0)">ID</th><th onclick="sortTable('table492', 1)">v1</th><th onclick="sortTable('table492', 2)">f</th><th onclick="sortTable('table492', 3)">v2</th></tr><tr><td>7</td><td>c</td><td>f</td><td>d</td></tr></table><table id="table493" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>vP</b></caption><tr><th onclick="sortTable('table493', 0)">ID</th><th onclick="sortTable('table493', 1)">v</th><th onclick="sortTable('table493', 2)">h</th></tr></table><table id="table494" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>vP0</b></caption><tr><th onclick="sortTable('table494', 0)">ID</th><th onclick="sortTable('table494', 1)">v</th><th onclick="sortTable('table494', 2)">h</th></tr><tr><td>8</td><td>x</td><td>main@1</td></tr><tr><td>9</td><td>y</td><td>main@2</td></tr><tr><td>10</td><td>z</td><td>main@3</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance J</h3><div><table id="table495" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>assign</b></caption><tr><th onclick="sortTable('table495', 0)">ID</th><th onclick="sortTable('table495', 1)">v1</th><th onclick="sortTable('table495', 2)">v2</th></tr><tr><td>0</td><td>d</td><td>b</td></tr><tr><td>1</td><td>c</td><td>a</td></tr><tr><td>2</td><td>d</td><td>x</td></tr><tr><td>3</td><td>a</td><td>x</td></tr><tr><td>4</td><td>b</td><td>y</td></tr><tr><td>5</td><td>c</td><td>z</td></tr></table><table id="table496" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>hP</b></caption><tr><th onclick="sortTable('table496', 0)">ID</th><th onclick="sortTable('table496', 1)">h1</th><th onclick="sortTable('table496', 2)">f</th><th onclick="sortTable('table496', 3)">h2</th></tr><tr><td>6</td><td>main@1</td><td>f</td><td>main@2</td></tr><tr><td>7</td><td>main@3</td><td>f</td><td>main@2</td></tr><tr><td>8</td><td>main@3</td><td>f</td><td>main@1</td></tr><tr><td>9</td><td>main@1</td><td>f</td><td>main@1</td></tr></table><table id="table497" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>load</b></caption><tr><th onclick="sortTable('table497', 0)">ID</th><th onclick="sortTable('table497', 1)">v1</th><th onclick="sortTable('table497', 2)">f</th><th onclick="sortTable('table497', 3)">v2</th></tr><tr><td>10</td><td>z</td><td>f</td><td>q</td></tr></table><table id="table498" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>store</b></caption><tr><th onclick="sortTable('table498', 0)">ID</th><th onclick="sortTable('table498', 1)">v1</th><th onclick="sortTable('table498', 2)">f</th><th onclick="sortTable('table498', 3)">v2</th></tr><tr><td>11</td><td>c</td><td>f</td><td>d</td></tr></table><table id="table499" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>vP</b></caption><tr><th onclick="sortTable('table499', 0)">ID</th><th onclick="sortTable('table499', 1)">v</th><th onclick="sortTable('table499', 2)">h</th></tr><tr><td>12</td><td>z</td><td>main@3</td></tr><tr><td>13</td><td>q</td><td>main@2</td></tr><tr><td>14</td><td>d</td><td>main@2</td></tr><tr><td>15</td><td>c</td><td>main@1</td></tr><tr><td>16</td><td>c</td><td>main@3</td></tr><tr><td>17</td><td>d</td><td>main@1</td></tr><tr><td>18</td><td>q</td><td>main@1</td></tr><tr><td>19</td><td>b</td><td>main@2</td></tr><tr><td>20</td><td>a</td><td>main@1</td></tr><tr><td>21</td><td>x</td><td>main@1</td></tr><tr><td>22</td><td>y</td><td>main@2</td></tr></table><table id="table500" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>vP0</b></caption><tr><th onclick="sortTable('table500', 0)">ID</th><th onclick="sortTable('table500', 1)">v</th><th onclick="sortTable('table500', 2)">h</th></tr><tr><td>23</td><td>z</td><td>main@3</td></tr><tr><td>24</td><td>y</td><td>main@2</td></tr><tr><td>25</td><td>x</td><td>main@1</td></tr></table></div><br style="clear:both;"/></body></html>

@@ -1,0 +1,377 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example JDBCSQL</h1><pre>
+options
+	jdbc_quote_char = "" 
+	always_reload = true 
+	#jdbc_default_string = "jdbc:postgresql://localhost:5432/postgres?user=postgres&amp;password=password"
+	#docker run --rm --name cql-fun -p 5432:5432 -e POSTGRES_PASSWORD=password -d postgres 
+	#to try postgres, be sure to replace the jdbcURL for the load command directly below
+	
+#create some example data in a local temporary sql database. (close delay keeps H2 database alive across connections)
+command load = exec_jdbc "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1" { 
+"DROP TABLE IF EXISTS Employee CASCADE;
+ DROP TABLE IF EXISTS Department CASCADE;
+ DROP TABLE IF EXISTS ExportedEmployee CASCADE;
+ DROP TABLE IF EXISTS ExportedDepartment CASCADE;
+ DROP TABLE IF EXISTS ExportedTransEmployee CASCADE;
+ DROP TABLE IF EXISTS ExportedTransDepartment CASCADE;" 
+
+#multiple statements can be used, but many SQL engines (such as H2, CQL's internal engine) will only print the output of the first statement, and some require ?allowMultiQueries=true in the jdbc string 
+
+"CREATE TABLE Employee(
+ id INT PRIMARY KEY,
+ name VARCHAR(255),
+ manager INT, 
+ worksIn INT)"
+
+"CREATE TABLE Department(
+ id INT PRIMARY KEY,
+ name VARCHAR(255),
+ secretary INT)"
+ 
+"INSERT INTO Employee VALUES 
+ (101, 'Alan', 103, 10), 
+ (102, 'Camille', 102, 2), 
+ (103, 'Andrey', 103, 10)"
+
+"INSERT INTO Department VALUES
+ (10, 'Applied Math', 101),
+ (2, 'Pure Math', 102)"
+
+"ALTER TABLE Employee ADD CONSTRAINT e1
+ FOREIGN KEY (manager) REFERENCES Employee (id)"
+
+"ALTER TABLE Employee ADD CONSTRAINT e2 
+ FOREIGN KEY (worksIn) REFERENCES Department (id)"
+
+"ALTER TABLE Department ADD CONSTRAINT d1
+ FOREIGN KEY (secretary) REFERENCES Employee (id)"
+
+# options always_reload = true #true forces pragmas to not be cached between runs (i.e., always run)
+}  
+ 
+# When the JDBC class name and string are left blank, CQL uses the value of the option
+#    jdbc_default_string.  These can be set globally by placing,
+#   at the beginning of the file, for example:
+#   
+#  options
+#   
+#   jdbc_default_string = "jdbc:h2:mem:db1;DB_CLOSE_DELAY=-1"
+#
+#look at the example data
+command view0 = exec_jdbc "" {  #see note above!!!
+"SELECT * FROM Department"
+"SELECT * FROM Employee"
+}
+
+####################################################
+
+schema S = literal : sql {
+	entities
+		Employee 
+		Department
+	foreign_keys
+		manager   : Employee -&gt; Employee
+		worksIn   : Employee -&gt; Department
+		secretary : Department -&gt; Employee
+	path_equations 
+		Employee.manager.worksIn = Employee.worksIn
+  		Department.secretary.worksIn = Department
+  		Employee.manager.manager = Employee.manager
+  	attributes
+  		first last	: Employee -&gt; Varchar
+     	age			: Employee -&gt; Integer
+     	name 		: Department -&gt; Varchar
+ }
+
+#import an instance by providing queries for each entity
+instance J = import_jdbc ""  : S {
+#use name as first name
+  #use null as last name
+  #use id as age	
+	Employee -&gt; "SELECT id, manager, worksIn, name AS first, 'lname' as last, id AS age FROM Employee"
+	Department -&gt; "SELECT id, secretary, name FROM Department"
+
+	options
+		#aql by default prepends the entity to each imported ID, to get uniqueness across entities.
+		#to import the IDs verbatim, set the option below to false
+		prepend_entity_on_ids = false
+}
+
+#import a transform by providing queries for each entity
+transform Jid = import_jdbc ""  : J -&gt; J {
+	Employee -&gt; "SELECT id, id FROM Employee"
+	Department -&gt; "SELECT id, id FROM Department"
+
+	options
+		prepend_entity_on_ids = false
+}
+
+#export the instance to SQL
+command store1 = export_jdbc_instance J ""  "Exported"
+{ options start_ids_at = 100 }
+
+#view exported SQL instance
+command view1 = exec_jdbc ""  { 
+	"SELECT * FROM ExportedEmployee"
+	"SELECT * FROM ExportedDepartment"
+}
+
+#export the transform to SQL
+command store2 = export_jdbc_transform Jid ""  "ExportedTrans" 
+ { options start_ids_at = 100 } #src
+ { options start_ids_at = 100 } #dst
+
+#view the exported SQL transform
+command view2 = exec_jdbc ""  { 
+	"SELECT * FROM ExportedTransEmployee"
+	"SELECT * FROM ExportedTransDepartment"
+}
+
+
+##########
+#direct method to land sql data
+
+schema S_direct2 = import_jdbc_all "" {
+ options allow_sql_import_all_unsafe=true
+}
+
+schema S_direct = literal : sql {
+	entities
+		Employee 
+		Department
+  	attributes
+		manager  name : Employee -&gt; Other
+		worksIn   : Employee -&gt; Other
+		secretary : Department -&gt; Other
+  		name 	  : Department -&gt; Other
+ }
+
+instance I = import_jdbc_direct "" "ROW_NUMBER() OVER ()" : S_direct 
+instance J2 = import_jdbc_direct "" "ROW_NUMBER() OVER ()" : S_direct2 
+##############################
+#
+#execute command line actions as follows
+#pragma cmdline1 = exec_cmdline  { 
+#"ls -ltr"
+#"echo hi"
+#}
+#
+#execute actions as follows
+#pragma js1 = exec_js  { 
+#"javax.swing.JOptionPane.showMessageDialog(null, \"hello1\")"
+#"javax.swing.JOptionPane.showMessageDialog(null, \"hello2\")"
+#}
+
+#store query evaluation as a view
+
+query Q = literal : S -&gt; S {
+	entity
+		Employee -&gt; 
+		{from e:Employee d:Department
+		 where e.worksIn = d
+		 attributes first -&gt; e.manager.first 
+		        last -&gt; d.name 
+		        age -&gt; e.age
+		        foreign_keys manager -&gt; {e -&gt; e.manager
+		            d -&gt; e.manager.worksIn}
+		worksIn -&gt; {d -&gt; e.worksIn}
+		}
+		
+		entity Department -&gt; {from d:Department 
+		               attributes name -&gt; d.name
+		               foreign_keys secretary -&gt; {e -&gt; d.secretary 
+		              d -&gt; d}}
+		
+	
+		
+}
+
+command store_id_query = export_jdbc_query Q "" "Exported" "View"
+
+command view_view = exec_jdbc ""  { 
+	"SELECT * FROM ViewEmployee"
+	"SELECT * FROM ViewDepartment"
+	"DROP VIEW ViewEmployee"
+	"DROP VIEW ViewDepartment" #clean up is important when re-running the program
+}
+</pre> Keywords:<br/></br>			<a href="queryquery_literal.html" >query_literal</a><br />
+			<a href="instanceimport_jdbc_direct.html" >import_jdbc_direct</a><br />
+			<a href="schemaschema_var.html" >schema_var</a><br />
+			<a href="commandexec_jdbc.html" >exec_jdbc</a><br />
+			<a href="instanceimport_jdbc.html" >import_jdbc</a><br />
+			<a href="commandexport_jdbc_query.html" >export_jdbc_query</a><br />
+			<a href="transformimport_jdbc.html" >import_jdbc</a><br />
+			<a href="commandexport_jdbc_transform.html" >export_jdbc_transform</a><br />
+			<a href="commandexport_jdbc_instance.html" >export_jdbc_instance</a><br />
+			<a href="schemaimport_jdbc_all.html" >import_jdbc_all</a><br />
+<br/>Options:<br/></br><a href="prepend_entity_on_ids.html" >prepend_entity_on_ids</a><br/>
+<a href="allow_sql_import_all_unsafe.html" >allow_sql_import_all_unsafe</a><br/>
+<a href="start_ids_at.html" >start_ids_at</a><br/>
+
+<br/></br>
+<hr/><h3>instance J</h3><div><table id="table293" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Department</b></caption><tr><th onclick="sortTable('table293', 0)">ID</th><th onclick="sortTable('table293', 1)">name</th><th onclick="sortTable('table293', 2)">secretary</th></tr><tr><td>0</td><td>Pure Math</td><td>3</td></tr><tr><td>1</td><td>Applied Math</td><td>2</td></tr></table><table id="table294" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Employee</b></caption><tr><th onclick="sortTable('table294', 0)">ID</th><th onclick="sortTable('table294', 1)">first</th><th onclick="sortTable('table294', 2)">last</th><th onclick="sortTable('table294', 3)">age</th><th onclick="sortTable('table294', 4)">manager</th><th onclick="sortTable('table294', 5)">worksIn</th></tr><tr><td>2</td><td>Alan</td><td>lname</td><td>101</td><td>4</td><td>1</td></tr><tr><td>3</td><td>Camille</td><td>lname</td><td>102</td><td>3</td><td>0</td></tr><tr><td>4</td><td>Andrey</td><td>lname</td><td>103</td><td>4</td><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance I</h3><div><table id="table295" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Department</b></caption><tr><th onclick="sortTable('table295', 0)">ID</th><th onclick="sortTable('table295', 1)">secretary</th><th onclick="sortTable('table295', 2)">name</th></tr><tr><td>0</td><td>102</td><td>Pure Math</td></tr><tr><td>1</td><td>101</td><td>Applied Math</td></tr></table><table id="table296" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Employee</b></caption><tr><th onclick="sortTable('table296', 0)">ID</th><th onclick="sortTable('table296', 1)">manager</th><th onclick="sortTable('table296', 2)">name</th><th onclick="sortTable('table296', 3)">worksIn</th></tr><tr><td>2</td><td>103</td><td>Alan</td><td>10</td></tr><tr><td>3</td><td>102</td><td>Camille</td><td>2</td></tr><tr><td>4</td><td>103</td><td>Andrey</td><td>10</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance J2</h3><div><table id="table297" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>PUBLIC.DEPARTMENT</b></caption><tr><th onclick="sortTable('table297', 0)">ID</th><th onclick="sortTable('table297', 1)">ID</th><th onclick="sortTable('table297', 2)">NAME</th><th onclick="sortTable('table297', 3)">SECRETARY</th></tr><tr><td>0</td><td>2</td><td>Pure Math</td><td>102</td></tr><tr><td>1</td><td>10</td><td>Applied Math</td><td>101</td></tr></table><table id="table298" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>PUBLIC.EMPLOYEE</b></caption><tr><th onclick="sortTable('table298', 0)">ID</th><th onclick="sortTable('table298', 1)">ID</th><th onclick="sortTable('table298', 2)">NAME</th><th onclick="sortTable('table298', 3)">MANAGER</th><th onclick="sortTable('table298', 4)">WORKSIN</th></tr><tr><td>2</td><td>101</td><td>Alan</td><td>103</td><td>10</td></tr><tr><td>3</td><td>102</td><td>Camille</td><td>102</td><td>2</td></tr><tr><td>4</td><td>103</td><td>Andrey</td><td>103</td><td>10</td></tr></table><table id="table299" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>PUBLIC.EXPORTEDDEPARTMENT</b></caption><tr><th onclick="sortTable('table299', 0)">ID</th><th onclick="sortTable('table299', 1)">ID</th><th onclick="sortTable('table299', 2)">SECRETARY</th><th onclick="sortTable('table299', 3)">NAME</th></tr><tr><td>5</td><td>103</td><td>102</td><td>Applied Math</td></tr><tr><td>6</td><td>104</td><td>101</td><td>Pure Math</td></tr></table><table id="table300" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>PUBLIC.EXPORTEDEMPLOYEE</b></caption><tr><th onclick="sortTable('table300', 0)">ID</th><th onclick="sortTable('table300', 1)">ID</th><th onclick="sortTable('table300', 2)">MANAGER</th><th onclick="sortTable('table300', 3)">WORKSIN</th><th onclick="sortTable('table300', 4)">AGE</th><th onclick="sortTable('table300', 5)">FIRST</th><th onclick="sortTable('table300', 6)">LAST</th></tr><tr><td>7</td><td>100</td><td>100</td><td>103</td><td>103</td><td>Andrey</td><td>lname</td></tr><tr><td>8</td><td>101</td><td>101</td><td>104</td><td>102</td><td>Camille</td><td>lname</td></tr><tr><td>9</td><td>102</td><td>100</td><td>103</td><td>101</td><td>Alan</td><td>lname</td></tr></table><table id="table301" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>PUBLIC.EXPORTEDTRANSDEPARTMENT</b></caption><tr><th onclick="sortTable('table301', 0)">ID</th><th onclick="sortTable('table301', 1)">SRCID</th><th onclick="sortTable('table301', 2)">DSTID</th></tr><tr><td>10</td><td>103</td><td>103</td></tr><tr><td>11</td><td>104</td><td>104</td></tr></table><table id="table302" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>PUBLIC.EXPORTEDTRANSEMPLOYEE</b></caption><tr><th onclick="sortTable('table302', 0)">ID</th><th onclick="sortTable('table302', 1)">SRCID</th><th onclick="sortTable('table302', 2)">DSTID</th></tr><tr><td>12</td><td>100</td><td>100</td></tr><tr><td>13</td><td>101</td><td>101</td></tr><tr><td>14</td><td>102</td><td>102</td></tr></table></div><br style="clear:both;"/><hr/><h3>command load</h3><pre>START
+DROP TABLE IF EXISTS Employee CASCADE;
+ DROP TABLE IF EXISTS Department CASCADE;
+ DROP TABLE IF EXISTS ExportedEmployee CASCADE;
+ DROP TABLE IF EXISTS ExportedDepartment CASCADE;
+ DROP TABLE IF EXISTS ExportedTransEmployee CASCADE;
+ DROP TABLE IF EXISTS ExportedTransDepartment CASCADE;
+
+Updated 0 rows.
+END
+
+START
+CREATE TABLE Employee(
+ id INT PRIMARY KEY,
+ name VARCHAR(255),
+ manager INT, 
+ worksIn INT)
+
+Updated 0 rows.
+END
+
+START
+CREATE TABLE Department(
+ id INT PRIMARY KEY,
+ name VARCHAR(255),
+ secretary INT)
+
+Updated 0 rows.
+END
+
+START
+INSERT INTO Employee VALUES 
+ (101, 'Alan', 103, 10), 
+ (102, 'Camille', 102, 2), 
+ (103, 'Andrey', 103, 10)
+
+Updated 3 rows.
+END
+
+START
+INSERT INTO Department VALUES
+ (10, 'Applied Math', 101),
+ (2, 'Pure Math', 102)
+
+Updated 2 rows.
+END
+
+START
+ALTER TABLE Employee ADD CONSTRAINT e1
+ FOREIGN KEY (manager) REFERENCES Employee (id)
+
+Updated 0 rows.
+END
+
+START
+ALTER TABLE Employee ADD CONSTRAINT e2 
+ FOREIGN KEY (worksIn) REFERENCES Department (id)
+
+Updated 0 rows.
+END
+
+START
+ALTER TABLE Department ADD CONSTRAINT d1
+ FOREIGN KEY (secretary) REFERENCES Employee (id)
+
+Updated 0 rows.
+END
+</pre><hr/><h3>command view0</h3><pre>START
+SELECT * FROM Department
+
+ID 2,  NAME Pure Math,  SECRETARY 102
+ID 10,  NAME Applied Math,  SECRETARY 101
+END
+
+START
+SELECT * FROM Employee
+
+ID 101,  NAME Alan,  MANAGER 103,  WORKSIN 10
+ID 102,  NAME Camille,  MANAGER 102,  WORKSIN 2
+ID 103,  NAME Andrey,  MANAGER 103,  WORKSIN 10
+END
+</pre><hr/><h3>command store1</h3><pre>Exported 5 rows.</pre><hr/><h3>command view1</h3><pre>START
+SELECT * FROM ExportedEmployee
+
+ID 100,  MANAGER 100,  WORKSIN 103,  AGE 103,  FIRST Andrey,  LAST lname
+ID 101,  MANAGER 101,  WORKSIN 104,  AGE 102,  FIRST Camille,  LAST lname
+ID 102,  MANAGER 100,  WORKSIN 103,  AGE 101,  FIRST Alan,  LAST lname
+END
+
+START
+SELECT * FROM ExportedDepartment
+
+ID 103,  SECRETARY 102,  NAME Applied Math
+ID 104,  SECRETARY 101,  NAME Pure Math
+END
+</pre><hr/><h3>command store2</h3><pre>Exported 10 rows.</pre><hr/><h3>command view2</h3><pre>START
+SELECT * FROM ExportedTransEmployee
+
+SRCID 100,  DSTID 100
+SRCID 101,  DSTID 101
+SRCID 102,  DSTID 102
+END
+
+START
+SELECT * FROM ExportedTransDepartment
+
+SRCID 103,  DSTID 103
+SRCID 104,  DSTID 104
+END
+</pre><hr/><h3>command store_id_query</h3><pre>export_jdbc_query drop view if exists ViewDepartment
+
+create view ViewDepartment as   select concat(concat('(d=', concat(cast(d.id as varchar(256)), ')')), concat('(unfold1=', concat(cast(unfold1.id as varchar(256)), ')'))) as id, d.name as name, concat(concat(concat('(e=', concat(cast(cast(unfold1.id as varchar(256)) as varchar(256)), ')')), concat('(unfold0=', concat(cast(cast(unfold1.manager as varchar(256)) as varchar(256)), ')'))), concat('(unfold2=', concat(cast(cast(unfold1.worksIn as varchar(256)) as varchar(256)), ')'))) as secretary
+from ExportedDepartment as d, ExportedEmployee as unfold1
+ 
+
+drop view if exists ViewEmployee
+
+create view ViewEmployee as   select concat(concat(concat('(e=', concat(cast(e.id as varchar(256)), ')')), concat('(unfold0=', concat(cast(unfold0.id as varchar(256)), ')'))), concat('(unfold2=', concat(cast(unfold2.id as varchar(256)), ')'))) as id, unfold0.first as first, unfold2.name as last, e.age as age, concat(concat(concat('(e=', concat(cast(cast(unfold0.id as varchar(256)) as varchar(256)), ')')), concat('(unfold0=', concat(cast(cast(unfold0.manager as varchar(256)) as varchar(256)), ')'))), concat('(unfold2=', concat(cast(cast(unfold0.worksIn as varchar(256)) as varchar(256)), ')'))) as manager, concat(concat('(d=', concat(cast(cast(unfold2.id as varchar(256)) as varchar(256)), ')')), concat('(unfold1=', concat(cast(cast(unfold2.secretary as varchar(256)) as varchar(256)), ')'))) as worksIn
+from ExportedEmployee as e, ExportedEmployee as unfold0, ExportedDepartment as unfold2
+ </pre><hr/><h3>command view_view</h3><pre>START
+SELECT * FROM ViewEmployee
+
+ID (e=100)(unfold0=100)(unfold2=103),  FIRST Andrey,  LAST Applied Math,  AGE 103,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
+ID (e=100)(unfold0=100)(unfold2=104),  FIRST Andrey,  LAST Pure Math,  AGE 103,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
+ID (e=100)(unfold0=101)(unfold2=103),  FIRST Camille,  LAST Applied Math,  AGE 103,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=103)(unfold1=102)
+ID (e=100)(unfold0=101)(unfold2=104),  FIRST Camille,  LAST Pure Math,  AGE 103,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=104)(unfold1=101)
+ID (e=100)(unfold0=102)(unfold2=103),  FIRST Alan,  LAST Applied Math,  AGE 103,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
+ID (e=100)(unfold0=102)(unfold2=104),  FIRST Alan,  LAST Pure Math,  AGE 103,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
+ID (e=101)(unfold0=100)(unfold2=103),  FIRST Andrey,  LAST Applied Math,  AGE 102,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
+ID (e=101)(unfold0=100)(unfold2=104),  FIRST Andrey,  LAST Pure Math,  AGE 102,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
+ID (e=101)(unfold0=101)(unfold2=103),  FIRST Camille,  LAST Applied Math,  AGE 102,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=103)(unfold1=102)
+ID (e=101)(unfold0=101)(unfold2=104),  FIRST Camille,  LAST Pure Math,  AGE 102,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=104)(unfold1=101)
+ID (e=101)(unfold0=102)(unfold2=103),  FIRST Alan,  LAST Applied Math,  AGE 102,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
+ID (e=101)(unfold0=102)(unfold2=104),  FIRST Alan,  LAST Pure Math,  AGE 102,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
+ID (e=102)(unfold0=100)(unfold2=103),  FIRST Andrey,  LAST Applied Math,  AGE 101,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
+ID (e=102)(unfold0=100)(unfold2=104),  FIRST Andrey,  LAST Pure Math,  AGE 101,  MANAGER (e=100)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
+ID (e=102)(unfold0=101)(unfold2=103),  FIRST Camille,  LAST Applied Math,  AGE 101,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=103)(unfold1=102)
+ID (e=102)(unfold0=101)(unfold2=104),  FIRST Camille,  LAST Pure Math,  AGE 101,  MANAGER (e=101)(unfold0=101)(unfold2=104),  WORKSIN (d=104)(unfold1=101)
+ID (e=102)(unfold0=102)(unfold2=103),  FIRST Alan,  LAST Applied Math,  AGE 101,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=103)(unfold1=102)
+ID (e=102)(unfold0=102)(unfold2=104),  FIRST Alan,  LAST Pure Math,  AGE 101,  MANAGER (e=102)(unfold0=100)(unfold2=103),  WORKSIN (d=104)(unfold1=101)
+END
+
+START
+SELECT * FROM ViewDepartment
+
+ID (d=103)(unfold1=100),  NAME Applied Math,  SECRETARY (e=100)(unfold0=100)(unfold2=103)
+ID (d=103)(unfold1=101),  NAME Applied Math,  SECRETARY (e=101)(unfold0=101)(unfold2=104)
+ID (d=103)(unfold1=102),  NAME Applied Math,  SECRETARY (e=102)(unfold0=100)(unfold2=103)
+ID (d=104)(unfold1=100),  NAME Pure Math,  SECRETARY (e=100)(unfold0=100)(unfold2=103)
+ID (d=104)(unfold1=101),  NAME Pure Math,  SECRETARY (e=101)(unfold0=101)(unfold2=104)
+ID (d=104)(unfold1=102),  NAME Pure Math,  SECRETARY (e=102)(unfold0=100)(unfold2=103)
+END
+
+START
+DROP VIEW ViewEmployee
+
+Updated 0 rows.
+END
+
+START
+DROP VIEW ViewDepartment
+
+Updated 0 rows.
+END
+</pre></body></html>

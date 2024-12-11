@@ -1,0 +1,324 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><body><h1>example APG</h1><pre>
+apg_typeside Ty = literal {
+	types
+		Str -&gt; "java.lang.String"  "x =&gt; x"
+		Nat -&gt; "java.lang.Integer" "parseInt"
+	functions
+		append : Str,Str -&gt; Str = "(x, y) =&gt; x.concat(y)"
+}
+
+##############################
+
+apg_schema VertexSch = literal : Ty {
+	labels
+		User -&gt; ()
+		Trip -&gt; ()
+}
+apg_instance Vertex = literal : VertexSch {
+	elements
+		u1 : User -&gt; ()
+		t1 : Trip -&gt; ()
+}
+
+##############################
+
+apg_schema EdgeSch = literal : Ty {
+	imports
+		VertexSch
+	labels
+		driver -&gt; (Trip:label Trip * User:label User)
+		rider  -&gt; (Trip:label Trip * User:label User)
+}
+apg_instance Edge = literal : EdgeSch {
+	imports
+		Vertex
+	elements
+		u2 : User   -&gt; ()
+		d1 : driver -&gt; (Trip:t1 , User:u1)
+		r1 : rider  -&gt; (Trip:t1 , User:u2)
+}
+
+##############################
+
+apg_schema PropertySch = literal : Ty {
+	labels
+		User -&gt; ()
+		name -&gt; (User:label User * name:base Str)
+}
+apg_instance Property = literal : PropertySch {
+	elements
+		u1 : User -&gt; ()
+		n1 : name -&gt; (User:u1, name:"Arthur Dent")
+		n2 : name -&gt; (User:u1, name:"Arthur P. Dent")
+}
+
+##############################
+
+apg_schema AliasSch = literal : Ty {
+	labels
+		Lat  -&gt; base Nat
+		Long -&gt; base Nat
+}
+apg_instance Alias = literal : AliasSch {
+	elements
+		d1 : Lat  -&gt; 4
+		d2 : Long -&gt; 5
+}
+
+##############################
+
+apg_schema HyperElementsSch = literal : Ty {
+	labels
+		User -&gt; ()
+		Trip -&gt; (user1:label User * user2:label User * event1:&lt;place:label PlaceEvent + null:()&gt; * event2:&lt;place:label PlaceEvent + null:()&gt;)
+		PlaceEvent -&gt; (place:label Place * event:label UnixTimeSeconds)
+		Place -&gt; ()
+		UnixTimeSeconds -&gt; base Nat
+}
+apg_instance HyperElements = literal : HyperElementsSch {
+	elements
+		u1 : User -&gt; ()
+		u2 : User -&gt; ()
+		u3 : User -&gt; ()
+		t1 : Trip -&gt; (user1:u1 , user2:u2 , event1:&lt;place:e1&gt;, event2: &lt;place:e2&gt;)
+		t2 : Trip -&gt; (user1:u1 , user2:u3 , event1:&lt;place:e3&gt;, event2: &lt;null :()&gt;)
+		e1 : PlaceEvent -&gt; (place:p1 , event:s1)
+		e2 : PlaceEvent -&gt; (place:p2 , event:s2)
+		e3 : PlaceEvent -&gt; (place:p2 , event:s3)
+		e4 : PlaceEvent -&gt; (place:p3 , event:s4)
+		p1 : Place -&gt; ()
+		p2 : Place -&gt; ()
+		p3 : Place -&gt; ()
+		s1 : UnixTimeSeconds -&gt; 1
+		s2 : UnixTimeSeconds -&gt; 1
+		s3 : UnixTimeSeconds -&gt; 4
+		s4 : UnixTimeSeconds -&gt; 3
+}
+
+#################################/
+
+apg_schema MSch = literal : Ty {
+	labels
+		PlateNumber -&gt; (id: base Str * region_id: base Str * region_lp: base Str)
+}
+apg_instance M = literal : MSch {
+	elements
+		p1 : PlateNumber -&gt; (id: US, region_id: CA, region_lp: "6trj244")
+		p2 : PlateNumber -&gt; (id: MX, region_id: BC, region_lp: "ahd4102")
+		q1 : PlateNumber -&gt; (id: US, region_id: CA, region_lp: "6trj244")
+		q2 : PlateNumber -&gt; (id: MX, region_id: SN, region_lp: "vuk1775")
+}
+
+apg_instance N = literal : MSch {
+	elements
+		p1q1 : PlateNumber -&gt; (id: US, region_id: CA, region_lp: "6trj244")
+}
+
+apg_morphism j = literal : N -&gt; M {
+	labels
+		PlateNumber -&gt; PlateNumber
+	elements
+		p1q1 -&gt; p1
+}
+
+apg_morphism k = literal : N -&gt; M {
+	labels
+		PlateNumber -&gt; PlateNumber
+	elements
+		p1q1 -&gt; p2
+}
+
+apg_instance CoEqjk = coequalize j k
+apg_morphism CoEqjkt = coequalize j k
+apg_morphism CoEqjkt_u = coequalize_u j k CoEqjkt #id
+
+#################################/
+
+apg_schema GSch = literal : Ty {
+	labels
+		L3 -&gt; base Str
+		L4 -&gt; label L4
+		L5 -&gt; (name: base Str * age: base Nat)
+		L6 -&gt; &lt;name: base Str + age: base Nat&gt;
+}
+apg_instance G = literal : GSch {
+	 elements
+         e4 : L4 -&gt; e4
+         e3 : L3 -&gt; "hello world"
+         e5 : L5 -&gt; (name:"bill", age: "35")
+         e6 : L6 -&gt; &lt;age: "30"&gt;
+}
+
+apg_morphism h = literal : G -&gt; G {
+	labels
+		L3-&gt;L3 L4-&gt;L4 L5-&gt;L5 L6-&gt;L6
+	elements
+		e4-&gt;e4 e3-&gt;e3 e5-&gt;e5 e6-&gt;e6
+}
+
+apg_instance i1 = empty GSch
+apg_instance i2 = unit Ty
+apg_instance i3 = &lt;G + G&gt;
+apg_instance i4 = (G * G)
+apg_instance i5 = equalize (identity G) (identity G)
+
+apg_morphism t1 = empty G
+apg_morphism t2 = unit G
+apg_morphism t3 = fst G G
+apg_morphism t4 = snd G G
+apg_morphism t5 = inl G G
+apg_morphism t6 = inr G G
+apg_morphism t7 = (t3,t4)
+apg_morphism t8 = &lt;t5|t6&gt;
+apg_morphism t9 = identity G
+apg_morphism t0 = [ t9 ; t9 ]
+apg_morphism ta = equalize t9 t9
+apg_morphism tb = equalize_u t9 t9 t9
+
+apg_schema x = &lt;VertexSch + VertexSch&gt;
+apg_schema y = (VertexSch * VertexSch)
+apg_schema z = empty Ty
+apg_schema w = unit Ty
+
+###############################
+
+apg_schema G0Sch = literal : Ty {
+	labels
+		L -&gt; base Str
+}
+apg_instance G0 = empty G0Sch
+
+apg_schema H0Sch = literal : Ty {
+	labels
+		L -&gt; base Nat
+}
+apg_instance H0 = empty H0Sch
+
+apg_morphism m0 = literal : G0 -&gt; H0 {
+	labels
+		L -&gt; L
+}
+
+apg_schema G2Sch = literal : Ty {
+	labels
+		L -&gt; (a: base Str * b: base Nat)
+}
+apg_instance G2 = literal : G2Sch {
+	elements
+		e:L -&gt; (a:hi, b:0)
+}
+apg_schema H2Sch = literal : Ty {
+	labels
+		L -&gt; (b: base Str * a: base Nat)
+}
+apg_instance H2 = literal : H2Sch {
+	elements
+		e:L -&gt; (b:hi, a:0)
+}
+apg_morphism m2 = literal : G2 -&gt; H2 {
+	labels
+		L -&gt; L
+	elements
+		e -&gt; e
+}
+
+###############################
+
+apg_schema T = literal : Ty {
+	labels
+		tLbl -&gt; (age: base Nat * name: base Str)
+}
+apg_schema S = literal : Ty {
+	labels
+		sLbl -&gt; (age: base Str * name: base Nat * ssn: base Nat)
+}
+
+# for mappings for now, terms must be fully type-annotated
+apg_mapping F = literal : S -&gt; T {
+	labels
+		sLbl -&gt; lambda v: label tLbl. (ssn: 0@Nat, name: .age(!tLbl(v)), age: .name(!tLbl(v)))
+}
+
+apg_instance J = literal : T {
+	elements
+		e : tLbl -&gt; (age: 40, name: Alice)
+}
+
+apg_instance I = delta F J
+
+apg_instance J2= literal : T {
+	elements
+		e2 : tLbl -&gt; (age: 40, name: Alice)
+}
+
+apg_morphism mt = literal : J -&gt; J2 {
+	labels
+		tLbl -&gt; tLbl
+	elements
+		e -&gt; e2
+}
+
+apg_morphism dmt = delta F mt
+
+#
+
+apg_schema Tx = literal : Ty {
+	labels
+		tLbl -&gt; &lt;age: base Nat + name: base Str&gt;
+}
+apg_schema Sx = literal : Ty {
+	labels
+		sLbl -&gt; &lt;AGE: base Nat + NAME: base Str&gt;
+}
+
+apg_mapping Fx = literal : Sx -&gt; Tx {
+	labels
+		sLbl -&gt; lambda v: label tLbl.
+			case !tLbl(v) where
+				age  -&gt; lambda x. &lt;AGE: x&gt; : &lt;AGE: base Nat + NAME: base Str&gt;
+		 		name -&gt; lambda x. &lt;NAME: append(x,x)&gt; : &lt;AGE: base Nat + NAME: base Str&gt;
+			: &lt;AGE: base Nat + NAME: base Str&gt;
+}
+
+apg_instance Jx = literal : Tx {
+	elements
+		e : tLbl -&gt; &lt;age: 40&gt;
+		f : tLbl -&gt; &lt;name: alice&gt;
+}
+
+apg_instance Ix = delta Fx Jx
+</pre> Keywords:<br/></br>			<a href="apg_morphismapg_morphism_literal.html" >apg_morphism_literal</a><br />
+			<a href="apg_schemaapg_schema_literal.html" >apg_schema_literal</a><br />
+			<a href="apg_instanceapg_instance_literal.html" >apg_instance_literal</a><br />
+			<a href="apg_typesideapg_typeside_literal.html" >apg_typeside_literal</a><br />
+			<a href="apg_morphismcoequalize_u.html" >coequalize_u</a><br />
+			<a href="apg_morphismapg_morphism_coproduct.html" >apg_morphism_coproduct</a><br />
+			<a href="apg_instanceapg_instance_identity.html" >apg_instance_identity</a><br />
+			<a href="apg_instanceapg_instance_product.html" >apg_instance_product</a><br />
+			<a href="apg_instanceapg_instance_coproduct.html" >apg_instance_coproduct</a><br />
+			<a href="apg_instanceunit.html" >unit</a><br />
+			<a href="apg_instanceempty.html" >empty</a><br />
+			<a href="apg_morphismequalize_u.html" >equalize_u</a><br />
+			<a href="apg_morphismequalize.html" >equalize</a><br />
+			<a href="apg_mappingapg_mapping_literal.html" >apg_mapping_literal</a><br />
+			<a href="apg_schemaempty.html" >empty</a><br />
+			<a href="apg_schemaapg_schema_product.html" >apg_schema_product</a><br />
+			<a href="apg_schemaapg_schema_coproduct.html" >apg_schema_coproduct</a><br />
+			<a href="apg_schemaunit.html" >unit</a><br />
+			<a href="apg_morphismdelta.html" >delta</a><br />
+			<a href="apg_morphismapg_morphism_identity.html" >apg_morphism_identity</a><br />
+			<a href="apg_morphismapg_morphism_product.html" >apg_morphism_product</a><br />
+			<a href="apg_morphisminr.html" >inr</a><br />
+			<a href="apg_morphisminl.html" >inl</a><br />
+			<a href="apg_morphismsnd.html" >snd</a><br />
+			<a href="apg_morphismfst.html" >fst</a><br />
+			<a href="apg_morphismunit.html" >unit</a><br />
+			<a href="apg_morphismempty.html" >empty</a><br />
+			<a href="apg_morphismapg_morphism_compose.html" >apg_morphism_compose</a><br />
+			<a href="apg_morphismcoequalize.html" >coequalize</a><br />
+			<a href="apg_instancedelta.html" >delta</a><br />
+			<a href="apg_instancecoequalize.html" >coequalize</a><br />
+<br/>Options:<br/></br>
+<br/></br>
+</body></html>

@@ -1,0 +1,8 @@
+Each table has a primary key column, comprised of meaningless identifiers.
+
+The non primary key numeric columns are always not null and are foreign keys.
+
+The string-valued columns in the Animal file are meaningful data.
+
+The data is denormalized: the path Amphibian -> Animal duplicates the path 
+  Amphibian -> LandAnimal -> Animal. 

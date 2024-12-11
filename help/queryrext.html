@@ -1,0 +1,22 @@
+<html><head>
+<link rel="stylesheet" href="http://categoricaldata.net/css/nstyle.css"><script src="http://categoricaldata.net/js/simple.js"></script></head><h1>query rext</h1>
+<pre>
+typeside t
+schema s1 : t
+schema s2 : t
+schema s3 : t
+query q12 : s1 -&gt; s2
+query q13 : s1 -&gt; s3
+----------------------------------
+query (rext q12 q13) : s2 -&gt; s3
+	</pre>
+Right Kan extensions of queries.
+<br/><br/>Appears in:<br/><br/>
+<a href="RExt.html" target="primary">RExt</a><br /><br/>Options:<br/><br/><a href="always_reload.html" target="primary">always_reload</a>
+<br/>
+<a href="num_threads.html" target="primary">num_threads</a>
+<br/>
+<a href="talg_reduction.html" target="primary">talg_reduction</a>
+<br/>
+<a href="timeout.html" target="primary">timeout</a>
+</html>
