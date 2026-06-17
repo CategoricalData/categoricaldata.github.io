@@ -1,9 +1,8 @@
 <html><head>
 <link rel="stylesheet" href="../css/nstyle.css"></head><h1>instance import_jdbc</h1>
 <pre>
-schema s : sql
 ----------------------------------
-instance (import_jdbc s  "jdbc_string") : s
+instance (import_jdbc sql  "jdbc_string") : schemaOf import_jdbc sql  "jdbc_string"
 	</pre>
 An instance obtained from a JDBC connection, one SQL query per entity.  The SQL code for each entity should return a table with an ID column and one column per attribute/foreign key from that table.  Note that these tables must be complete: this keyword imports a model (set of tables) of a schema, not a presentation of a model of a schema (i.e., as  literal does).  To import an instance as a theory, use the  import_as_theory option.  When the [jdbcclass] and [jdbcuri] are the empty string, their values will be determined by the  jdbc_default_class and  jdbc_default_string options.  See also import_missing_is_empty.
 <br/><br/>Appears in:<br/><br/>
@@ -32,6 +31,10 @@ An instance obtained from a JDBC connection, one SQL query per entity.  The SQL 
 <a href="e_path.html" target="primary">e_path</a>
 <br/>
 <a href="e_use_auto.html" target="primary">e_use_auto</a>
+<br/>
+<a href="egglog_bound.html" target="primary">egglog_bound</a>
+<br/>
+<a href="egglog_path.html" target="primary">egglog_path</a>
 <br/>
 <a href="id_column_name.html" target="primary">id_column_name</a>
 <br/>
@@ -72,6 +75,8 @@ An instance obtained from a JDBC connection, one SQL query per entity.  The SQL 
 <a href="timeout.html" target="primary">timeout</a>
 <br/>
 <a href="triviality_check_best_effort.html" target="primary">triviality_check_best_effort</a>
+<br/>
+<a href="use_egglog_for_chase.html" target="primary">use_egglog_for_chase</a>
 <br/>
 <a href="vampire_path.html" target="primary">vampire_path</a>
 </html>

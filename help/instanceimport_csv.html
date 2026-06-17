@@ -1,18 +1,14 @@
 <html><head>
 <link rel="stylesheet" href="../css/nstyle.css"></head><h1>instance import_csv</h1>
 <pre>
-typeside t
-schema s : t
 ----------------------------------
-instance (import_csv "directory" : s) : s
+instance (import_csv "directory" : sql) : schemaOf import_csv "directory" : sql
 	</pre>
 For each entity en, expects a file pre + en.csv in the directory, where pre is controlled by option csv_import_file_prefix.  The file extension can be changed with the csv_file_extension option  The file for en should be a CSV file with a header; the fields of the header should be an ID column name (specified using options), as well as any attributes and foreign keys whose domain is en.  The mapping between the schemas entities (ID columns), attributes, and foreign keys and the headers of the CSV file are controlled by the options; see the CSV built-in example for details.  The import_missing_is_empty option will interpret missing files as empty files. See also csv_prepend_entity.  
 Records can contain nulls (using the string specified in options).  Note that these tables must be complete: this keyword imports a model (set of tables) of a schema, not a presentation of a model of a schema (i.e., as  literal does).  To import an instance as a theory, use the  import_as_theory option.  To auto generate IDs, see  csv_generate_ids option. See also csv related options,  id_column_name, and  require_consistency. 
  See also  prepend_entity_on_ids.
 <br/><br/>Appears in:<br/><br/>
-<a href="CSV.html" target="primary">CSV</a><br />
-<a href="Demo.html" target="primary">Demo</a><br />
-<a href="QuickCSV.html" target="primary">QuickCSV</a><br /><br/>Options:<br/><br/><a href="always_reload.html" target="primary">always_reload</a>
+<a href="CSV.html" target="primary">CSV</a><br /><br/>Options:<br/><br/><a href="always_reload.html" target="primary">always_reload</a>
 <br/>
 <a href="csv_escape_char.html" target="primary">csv_escape_char</a>
 <br/>

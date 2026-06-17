@@ -9,10 +9,11 @@ command (export_jdbc_instance i  "jdbc_string" "prefix")
 	</pre>
 Emit an instance (on SQL type side) over a JDBC connection, one table per entity with one column per foreign key and attribute.  There will be a table prefixed by each entity en.  The columns will be the attributes and foreign keys whose domain is en , and an ID column whose name is set in options.  CQL rows that are not syntactically constants will be exported as NULL.  When the [jdbcclass] and [jdbcuri] are the empty string, their values will be determined by the  jdbc_default_class and jdbc_default_string options.  See start_ids_at and id_column_name and varchar_length.
 <br/><br/>Appears in:<br/><br/>
-<a href="Demo.html" target="primary">Demo</a><br />
 <a href="JDBCSQL.html" target="primary">JDBCSQL</a><br /><br/>Options:<br/><br/><a href="always_reload.html" target="primary">always_reload</a>
 <br/>
 <a href="emit_ids.html" target="primary">emit_ids</a>
+<br/>
+<a href="emit_nulls.html" target="primary">emit_nulls</a>
 <br/>
 <a href="id_column_name.html" target="primary">id_column_name</a>
 <br/>
