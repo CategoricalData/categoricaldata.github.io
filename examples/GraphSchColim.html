@@ -1,0 +1,20 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>GraphSchColim — CQL Example</title><style>body{font-family:sans-serif;margin:2em;line-height:1.4;color:#222}h1{border-bottom:1px solid #ccc;padding-bottom:.3em}pre{background:#f5f5f5;border:1px solid #ddd;padding:1em;overflow:auto;white-space:pre-wrap}table{border-collapse:collapse}a{color:#0645ad;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><p><a href="index.html">← All examples</a></p><h1>example GraphSchColim</h1><pre>
+graph span = literal {
+	nodes L X R
+	edges f : L -&gt; X   g : X -&gt; R
+}
+
+typeside T = empty
+schema S = empty : T
+mapping F = identity S
+
+schema_colimit C = literal span : T {
+	nodes
+		L -&gt; S
+		X -&gt; S
+		R -&gt; S
+	edges
+		f -&gt; F
+		g -&gt; F
+}
+</pre></body></html>

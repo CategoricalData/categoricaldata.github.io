@@ -1,0 +1,44 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Cayley — CQL Example</title><style>body{font-family:sans-serif;margin:2em;line-height:1.4;color:#222}h1{border-bottom:1px solid #ccc;padding-bottom:.3em}pre{background:#f5f5f5;border:1px solid #ddd;padding:1em;overflow:auto;white-space:pre-wrap}table{border-collapse:collapse}a{color:#0645ad;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><p><a href="index.html">← All examples</a></p><h1>example Cayley</h1><pre>
+schema Dihedral2 = literal : empty {
+	entities
+		G 
+	foreign_keys
+		r s : G -&gt; G
+	path_equations	
+		G.r.r = G
+		G.s.s = G
+		G.s.r.s = G.r
+}
+
+schema Quaternions = literal : empty {
+	entities
+		G 
+	foreign_keys
+		x y x0 y0 : G -&gt; G
+	path_equations	
+		G.x.x0=G
+		G.x0.x=G
+		G.y.y0=G
+		G.y0.y=G
+		G.x.x.x.x = G
+		G.x.x = G.y.y
+		G.y0.x.y = G.x0
+}
+
+schema Cyclic4 = literal : empty {
+	entities
+		G 
+	foreign_keys
+		f : G -&gt; G
+	path_equations
+		G.f.f.f.f=G
+		
+}
+
+schema FreeMonoid = literal : empty {
+	entities
+		G 
+	foreign_keys
+		a b : G -&gt; G		
+}
+</pre></body></html>

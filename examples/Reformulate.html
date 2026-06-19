@@ -1,0 +1,104 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Reformulate — CQL Example</title><style>body{font-family:sans-serif;margin:2em;line-height:1.4;color:#222}h1{border-bottom:1px solid #ccc;padding-bottom:.3em}pre{background:#f5f5f5;border:1px solid #ddd;padding:1em;overflow:auto;white-space:pre-wrap}table{border-collapse:collapse}a{color:#0645ad;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><p><a href="index.html">← All examples</a></p><h1>example Reformulate</h1><pre>
+schema S = literal : sql {
+entities
+	CUST SUPPCATALOG WEBORDER
+attributes
+	CUST_ID : CUST -&gt; Integer
+	CNATION : CUST -&gt; Text
+	SUPP_ID : WEBORDER -&gt; Smallint
+	ORDERKEY : WEBORDER -&gt; Varchar
+	CUST_ID : WEBORDER -&gt; Integer
+	SUPP_ID : SUPPCATALOG -&gt; Smallint
+	SADDR : SUPPCATALOG -&gt; Other
+	SNATION : SUPPCATALOG -&gt; String
+}
+
+instance I = literal : S {
+	generators
+		CUST_3:CUST	CUST_2:CUST	CUST_1:CUST	
+		WEBORDER_2:WEBORDER	WEBORDER_1:WEBORDER	
+		SUPPCATALOG_4:SUPPCATALOG	SUPPCATALOG_3:SUPPCATALOG	
+		SUPPCATALOG_2:SUPPCATALOG	SUPPCATALOG_1:SUPPCATALOG
+	equations	
+		CUST_3.CUST_ID = 3	
+		CUST_3.CNATION = jpy	
+		CUST_2.CUST_ID = 2	
+		CUST_2.CNATION = uk	
+		CUST_1.CUST_ID = 1	
+		CUST_1.CNATION = usa	
+		WEBORDER_2.SUPP_ID = 52	
+		WEBORDER_2.ORDERKEY = order2	
+		WEBORDER_2.CUST_ID = 1	
+		WEBORDER_1.SUPP_ID = 51	
+		WEBORDER_1.ORDERKEY = order1	
+		WEBORDER_1.CUST_ID = 1	
+		SUPPCATALOG_4.SUPP_ID = 54	
+		SUPPCATALOG_4.SADDR = s4addr	
+		SUPPCATALOG_4.SNATION = mexico	
+		SUPPCATALOG_3.SUPP_ID = 53	
+		SUPPCATALOG_3.SADDR = s3addr	
+		SUPPCATALOG_3.SNATION = cn	
+		SUPPCATALOG_2.SUPP_ID = 52	
+		SUPPCATALOG_2.SADDR = s2addr	
+		SUPPCATALOG_2.SNATION = india	
+		SUPPCATALOG_1.SUPP_ID = 51	
+		SUPPCATALOG_1.SADDR = s1addr	
+		SUPPCATALOG_1.SNATION = usa	
+}
+ 
+
+schema T = literal : sql {
+	entities
+		mastercust mastersupp supp2cust
+	attributes
+		cnation : mastercust -&gt; Text
+		cust_id : mastercust -&gt; Integer
+		cust_id : supp2cust -&gt; Integer
+		orderkey : supp2cust -&gt; Varchar
+		supp_id : supp2cust -&gt; Smallint
+		saddr : mastersupp -&gt; Other
+		snation : mastersupp -&gt; String
+		supp_id : mastersupp -&gt; Smallint
+}
+
+instance J = literal : T {
+	generators
+		x:mastercust	y:mastersupp	z:mastersupp	w:supp2cust	v:supp2cust
+	equations	
+		x.cnation = usa	
+		x.cust_id = 1	
+		y.saddr = s2addr	
+		y.snation = india	
+		y.supp_id = 52	
+		z.saddr = s1addr	
+		z.snation = usa	
+		z.supp_id = 51	
+		w.cust_id = 1	
+		w.orderkey = order2	
+		w.supp_id = 52	
+		v.cust_id = 1	
+		v.orderkey = order1	
+		v.supp_id = 51
+}
+
+schema ST = literal : sql {	imports S T }
+
+instance IJ = literal : ST {
+	imports I J
+}
+
+constraints C = all IJ T
+
+query Qold = simple : ST {
+	from s:SUPPCATALOG w:WEBORDER 
+	where w.SUPP_ID=s.SUPP_ID 
+	attributes SNATION-&gt;s.SNATION
+		CUST_ID-&gt;w.CUST_ID
+		SADDR-&gt;s.SADDR
+		SUPP_ID-&gt;w.SUPP_ID
+}
+
+query Qnew = reformulate C (chase C Qold) T 0 
+instance QoldResult = eval Qold IJ
+instance QnewResult = eval Qnew IJ
+</pre><hr/><h3>instance I</h3><div><table id="table488" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>CUST</b></caption><tr><th onclick="sortTable('table488', 0)">ID</th><th onclick="sortTable('table488', 1)">CUST_ID</th><th onclick="sortTable('table488', 2)">CNATION</th></tr><tr><td>0</td><td>3</td><td>jpy</td></tr><tr><td>1</td><td>2</td><td>uk</td></tr><tr><td>2</td><td>1</td><td>usa</td></tr></table><table id="table489" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>SUPPCATALOG</b></caption><tr><th onclick="sortTable('table489', 0)">ID</th><th onclick="sortTable('table489', 1)">SUPP_ID</th><th onclick="sortTable('table489', 2)">SADDR</th><th onclick="sortTable('table489', 3)">SNATION</th></tr><tr><td>3</td><td>54</td><td>s4addr</td><td>mexico</td></tr><tr><td>4</td><td>53</td><td>s3addr</td><td>cn</td></tr><tr><td>5</td><td>52</td><td>s2addr</td><td>india</td></tr><tr><td>6</td><td>51</td><td>s1addr</td><td>usa</td></tr></table><table id="table490" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>WEBORDER</b></caption><tr><th onclick="sortTable('table490', 0)">ID</th><th onclick="sortTable('table490', 1)">SUPP_ID</th><th onclick="sortTable('table490', 2)">ORDERKEY</th><th onclick="sortTable('table490', 3)">CUST_ID</th></tr><tr><td>7</td><td>52</td><td>order2</td><td>1</td></tr><tr><td>8</td><td>51</td><td>order1</td><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance IJ</h3><div><table id="table491" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>CUST</b></caption><tr><th onclick="sortTable('table491', 0)">ID</th><th onclick="sortTable('table491', 1)">CUST_ID</th><th onclick="sortTable('table491', 2)">CNATION</th></tr><tr><td>0</td><td>3</td><td>jpy</td></tr><tr><td>1</td><td>2</td><td>uk</td></tr><tr><td>2</td><td>1</td><td>usa</td></tr></table><table id="table492" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>SUPPCATALOG</b></caption><tr><th onclick="sortTable('table492', 0)">ID</th><th onclick="sortTable('table492', 1)">SUPP_ID</th><th onclick="sortTable('table492', 2)">SADDR</th><th onclick="sortTable('table492', 3)">SNATION</th></tr><tr><td>3</td><td>54</td><td>s4addr</td><td>mexico</td></tr><tr><td>4</td><td>53</td><td>s3addr</td><td>cn</td></tr><tr><td>5</td><td>52</td><td>s2addr</td><td>india</td></tr><tr><td>6</td><td>51</td><td>s1addr</td><td>usa</td></tr></table><table id="table493" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>WEBORDER</b></caption><tr><th onclick="sortTable('table493', 0)">ID</th><th onclick="sortTable('table493', 1)">SUPP_ID</th><th onclick="sortTable('table493', 2)">ORDERKEY</th><th onclick="sortTable('table493', 3)">CUST_ID</th></tr><tr><td>7</td><td>52</td><td>order2</td><td>1</td></tr><tr><td>8</td><td>51</td><td>order1</td><td>1</td></tr></table><table id="table494" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>mastercust</b></caption><tr><th onclick="sortTable('table494', 0)">ID</th><th onclick="sortTable('table494', 1)">cnation</th><th onclick="sortTable('table494', 2)">cust_id</th></tr><tr><td>9</td><td>usa</td><td>1</td></tr></table><table id="table495" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>mastersupp</b></caption><tr><th onclick="sortTable('table495', 0)">ID</th><th onclick="sortTable('table495', 1)">saddr</th><th onclick="sortTable('table495', 2)">snation</th><th onclick="sortTable('table495', 3)">supp_id</th></tr><tr><td>10</td><td>s2addr</td><td>india</td><td>52</td></tr><tr><td>11</td><td>s1addr</td><td>usa</td><td>51</td></tr></table><table id="table496" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>supp2cust</b></caption><tr><th onclick="sortTable('table496', 0)">ID</th><th onclick="sortTable('table496', 1)">cust_id</th><th onclick="sortTable('table496', 2)">orderkey</th><th onclick="sortTable('table496', 3)">supp_id</th></tr><tr><td>12</td><td>1</td><td>order2</td><td>52</td></tr><tr><td>13</td><td>1</td><td>order1</td><td>51</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance J</h3><div><table id="table497" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>mastercust</b></caption><tr><th onclick="sortTable('table497', 0)">ID</th><th onclick="sortTable('table497', 1)">cnation</th><th onclick="sortTable('table497', 2)">cust_id</th></tr><tr><td>0</td><td>usa</td><td>1</td></tr></table><table id="table498" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>mastersupp</b></caption><tr><th onclick="sortTable('table498', 0)">ID</th><th onclick="sortTable('table498', 1)">saddr</th><th onclick="sortTable('table498', 2)">snation</th><th onclick="sortTable('table498', 3)">supp_id</th></tr><tr><td>1</td><td>s2addr</td><td>india</td><td>52</td></tr><tr><td>2</td><td>s1addr</td><td>usa</td><td>51</td></tr></table><table id="table499" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>supp2cust</b></caption><tr><th onclick="sortTable('table499', 0)">ID</th><th onclick="sortTable('table499', 1)">cust_id</th><th onclick="sortTable('table499', 2)">orderkey</th><th onclick="sortTable('table499', 3)">supp_id</th></tr><tr><td>3</td><td>1</td><td>order2</td><td>52</td></tr><tr><td>4</td><td>1</td><td>order1</td><td>51</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance QnewResult</h3><div><table id="table500" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Q</b></caption><tr><th onclick="sortTable('table500', 0)">ID</th><th onclick="sortTable('table500', 1)">SNATION</th><th onclick="sortTable('table500', 2)">SADDR</th><th onclick="sortTable('table500', 3)">SUPP_ID</th><th onclick="sortTable('table500', 4)">CUST_ID</th></tr><tr><td>0</td><td>india</td><td>s2addr</td><td>52</td><td>1</td></tr><tr><td>1</td><td>usa</td><td>s1addr</td><td>51</td><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance QoldResult</h3><div><table id="table501" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Q</b></caption><tr><th onclick="sortTable('table501', 0)">ID</th><th onclick="sortTable('table501', 1)">SNATION</th><th onclick="sortTable('table501', 2)">SADDR</th><th onclick="sortTable('table501', 3)">SUPP_ID</th><th onclick="sortTable('table501', 4)">CUST_ID</th></tr><tr><td>0</td><td>india</td><td>s2addr</td><td>52</td><td>1</td></tr><tr><td>1</td><td>usa</td><td>s1addr</td><td>51</td><td>1</td></tr></table></div><br style="clear:both;"/></body></html>
