@@ -60,11 +60,11 @@ Open-source CQL and its integrated development environment (IDE) performs data-r
 
 	<ul>
 	
-	<li><b>Reduce risk of failure through artificial intelligence</b>.  CQL contains an embedded automated theorem prover that guarantees the correctness of CQL programs.  For example, <a href="fk.html">a CQL program cannot materialize an instance that violates a data integrity constraint</a>.  Such errors are detected at compile time, when they are easiest to fix. </li>
+	<li><b>Reduce risk of failure through artificial intelligence</b>.  CQL contains an embedded automated theorem prover that guarantees the correctness of CQL programs.  For example, <a href="examples/ForeignKeys.html">a CQL program cannot materialize an instance that violates a data integrity constraint</a>.  Such errors are detected at compile time, when they are easiest to fix. </li>
 	
-	<li><b>Preserve data quality</b>. High-quality data is expensive to obtain, so it is important to preserve that quality throughout the data life-cycle. CQL programs evolve and migrate data in a mathematically universal way, with zero degradation. As such, data integrated by CQL has many advantages, including perfect provenance: <a href="joinless.html">every row in the output of an CQL program contains a lineage that describes exactly how that row was obtained from input data</a>.</li>
+	<li><b>Preserve data quality</b>. High-quality data is expensive to obtain, so it is important to preserve that quality throughout the data life-cycle. CQL programs evolve and migrate data in a mathematically universal way, with zero degradation. As such, data integrated by CQL has many advantages, including perfect provenance: <a href="examples/Joinless.html">every row in the output of an CQL program contains a lineage that describes exactly how that row was obtained from input data</a>.</li>
 	
-	<li><b>Increased developer productivity through higher-level abstractions</b>.  CQL generalizes concepts from SQL using powerful principles from category theory.  For example, <a href="fk.html">CQL generalizes SQL's select-from-where queries from returning single tables to returning many tables related by foreign keys</a>.  Such higher-level abstractions enable developers to be more productive. </li>
+	<li><b>Increased developer productivity through higher-level abstractions</b>.  CQL generalizes concepts from SQL using powerful principles from category theory.  For example, <a href="examples/ForeignKeys.html">CQL generalizes SQL's select-from-where queries from returning single tables to returning many tables related by foreign keys</a>.  Such higher-level abstractions enable developers to be more productive. </li>
 
 	
 	
@@ -72,12 +72,12 @@ Open-source CQL and its integrated development environment (IDE) performs data-r
 	<hr>
 <h2>Key Features</h2>
 	<ul>
-		<li><b>Flexible I/O:</b> data can be imported into and exported out of CQL <a href="jdbc.html">by JDBC-SQL</a>, CSV, and more.</li>
+		<li><b>Flexible I/O:</b> data can be imported into and exported out of CQL <a href="examples/JDBCSQL.html">by JDBC-SQL</a>, CSV, and more.</li>
 		<li><b>Visualization:</b> CQL <a href="images/shot2.png">schemas</a>, <a href="images/shot3.png">databases</a>, etc. can be displayed graphically.</li>
-		<li><b>Rich data integrity constraints:</b> CQL schemas contain entities, attributes, and foreign keys - as well as <a href="eqs.html">equations between them</a>.  One use of equations is for <a href="denorm.html">denormalization without the need to manually enforce the consistency of redundant data</a>.</li>   
-		<li><b>Computational schemas:</b> <a href="unitconv.html">user-defined functions are part of CQL schemas</a> and can be specified  using java, javascript, or purely equationally.  CQL's theorem prover can reason about user-defined functions and how they relate to data integrity constraints.</li>  
-		<li><b>More principled than SQL:</b> relational concepts such as <a href="joinless.html">foreign keys re-appear, in a more principled form, in CQL</a>.  And <a href="quotient.html">CQL provides primitives that SQL lacks</a>.</li>			
-		<li><b>100% java</b>.  User-defined functions can be written in java or javascript, and a deep embedding of CQL into Haskell, in collaboration with <a href="https://statebox.org">Statebox</a>, is under development. </li>
+		<li><b>Rich data integrity constraints:</b> CQL schemas contain entities, attributes, and foreign keys - as well as <a href="examples/Sigma.html">equations between them</a>.  One use of equations is for <a href="examples/Denormalize.html">denormalization without the need to manually enforce the consistency of redundant data</a>.</li>   
+		<li><b>Computational schemas:</b> <a href="examples/UnitConv.html">user-defined functions are part of CQL schemas</a> and can be specified  using java, javascript, or purely equationally.  CQL's theorem prover can reason about user-defined functions and how they relate to data integrity constraints.</li>  
+		<li><b>More principled than SQL:</b> relational concepts such as <a href="examples/Joinless.html">foreign keys re-appear, in a more principled form, in CQL</a>.  And <a href="examples/Quotient.html">CQL provides primitives that SQL lacks</a>.</li>			
+		<li><b>100% java</b>.  User-defined functions can be written in java or javascript, and a deep embedding of CQL into Haskell, in collaboration with <a href="https://statebox.org">Statebox</a>, is <a href="https://github.com/statebox/cql">under development</a>. </li>
 		
 		<li><b>Stateless</b>.  CQL is not a database management system: it neither stores nor updates data.  It is a <a href="https://categoricaldata.net/cql/fql_def.pdf">canonical functional programming language</a> and IDE whose scalability is similar to that of SQL and <a href="https://www.cs.ox.ac.uk/boris.motik/pubs/bkmmpst17becnhmarking-chase.pdf">chase engines</a>.  </li>
 		
