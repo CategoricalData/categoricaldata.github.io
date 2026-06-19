@@ -1,0 +1,73 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>Pushout — CQL Example</title><style>body{font-family:sans-serif;margin:2em;line-height:1.4;color:#222}h1{border-bottom:1px solid #ccc;padding-bottom:.3em}pre{background:#f5f5f5;border:1px solid #ddd;padding:1em;overflow:auto;white-space:pre-wrap}table{border-collapse:collapse}a{color:#0645ad;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><p><a href="index.html">← All examples</a></p><h1>example Pushout</h1><pre>
+typeside Type = literal {
+	external_types
+		dom -&gt; "java.lang.Object"
+	external_parsers
+		dom -&gt; "x =&gt; x"
+}
+
+#####################################/
+
+schema Span = literal : Type {
+	entities
+		A B C
+ 	foreign_keys
+		f: A -&gt; B
+		g: A -&gt; C
+	attributes
+		C_att : C -&gt; dom
+		B_att : B -&gt; dom
+}
+
+schema Square = literal : Type {
+	imports
+		Span
+	entities
+		D
+ 	foreign_keys
+		f2: B -&gt; D
+		g2: C -&gt; D
+	path_equations
+		A.f.f2=A.g.g2
+	attributes
+		D_attB : D -&gt; dom
+		D_attC : D -&gt; dom
+}
+
+instance J = literal : Span {
+	generators
+		a : A
+		b1 b2 : B
+		c1 c2 : C
+	equations
+		b1.B_att = "b1"@dom
+		b2.B_att = "b2"@dom
+		c1.C_att = "c1"@dom
+		c2.C_att = "c2"@dom
+		a.f = b1
+		a.g = c1
+}
+
+##################################################
+#pushouts, using queries
+
+query pushout = literal : Square -&gt; Span {
+
+
+entity	B -&gt; {from b:B
+		 attributes B_att -&gt; b.f2.D_attB}
+
+entity	C -&gt; {from c:C
+		 attributes C_att -&gt; c.g2.D_attC}
+
+entity	A -&gt; {from a:A
+			foreign_keys
+			f -&gt; {b -&gt; a.f}
+			g -&gt; {c -&gt; a.g}}
+
+}
+
+instance I = coeval pushout J
+
+transform t = unit_query pushout J
+</pre><hr/><h3>instance I</h3><div><table id="table502" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>A</b></caption><tr><th onclick="sortTable('table502', 0)">ID</th><th onclick="sortTable('table502', 1)">f</th><th onclick="sortTable('table502', 2)">g</th></tr><tr><td>0</td><td>1</td><td>3</td></tr></table><table id="table503" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>B</b></caption><tr><th onclick="sortTable('table503', 0)">ID</th><th onclick="sortTable('table503', 1)">B_att</th><th onclick="sortTable('table503', 2)">f2</th></tr><tr><td>1</td><td>?0</td><td>5</td></tr><tr><td>2</td><td>?1</td><td>6</td></tr></table><table id="table504" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>C</b></caption><tr><th onclick="sortTable('table504', 0)">ID</th><th onclick="sortTable('table504', 1)">C_att</th><th onclick="sortTable('table504', 2)">g2</th></tr><tr><td>3</td><td>?2</td><td>5</td></tr><tr><td>4</td><td>?3</td><td>7</td></tr></table><table id="table505" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>D</b></caption><tr><th onclick="sortTable('table505', 0)">ID</th><th onclick="sortTable('table505', 1)">D_attB</th><th onclick="sortTable('table505', 2)">D_attC</th></tr><tr><td>5</td><td>b1</td><td>c1</td></tr><tr><td>6</td><td>b2</td><td>?4</td></tr><tr><td>7</td><td>?5</td><td>c2</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance J</h3><div><table id="table506" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>A</b></caption><tr><th onclick="sortTable('table506', 0)">ID</th><th onclick="sortTable('table506', 1)">f</th><th onclick="sortTable('table506', 2)">g</th></tr><tr><td>0</td><td>1</td><td>3</td></tr></table><table id="table507" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>B</b></caption><tr><th onclick="sortTable('table507', 0)">ID</th><th onclick="sortTable('table507', 1)">B_att</th></tr><tr><td>1</td><td>b1</td></tr><tr><td>2</td><td>b2</td></tr></table><table id="table508" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>C</b></caption><tr><th onclick="sortTable('table508', 0)">ID</th><th onclick="sortTable('table508', 1)">C_att</th></tr><tr><td>3</td><td>c1</td></tr><tr><td>4</td><td>c2</td></tr></table></div><br style="clear:both;"/></body></html>

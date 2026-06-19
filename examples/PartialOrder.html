@@ -1,0 +1,25 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>PartialOrder — CQL Example</title><style>body{font-family:sans-serif;margin:2em;line-height:1.4;color:#222}h1{border-bottom:1px solid #ccc;padding-bottom:.3em}pre{background:#f5f5f5;border:1px solid #ddd;padding:1em;overflow:auto;white-space:pre-wrap}table{border-collapse:collapse}a{color:#0645ad;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><p><a href="index.html">← All examples</a></p><h1>example PartialOrder</h1><pre>
+schema Rel = literal : empty {
+	entities 
+		Dom Row
+	foreign_keys 
+		p1 p2 : Row -&gt; Dom
+}
+
+constraints PartialOrder = literal : Rel {
+	forall d:Dom -&gt; exists r:Row where r.p1 = d r.p2 = d #refl
+	
+	forall r1 r2:Row where r1.p1 = r2.p2 r1.p2 = r2.p1 -&gt; where r1.p1 = r1.p2  #anti-sym
+	
+	forall r1 r2:Row where r1.p2 = r2.p1 -&gt; 
+	exists r3:Row where r3.p1 = r1.p1 r3.p2 = r2.p2 #trans
+}
+
+instance TwoGenerators = literal : Rel { 
+	generators 
+		0 1 : Dom 
+}
+
+#R(0,0) R(1,1)
+instance FreePartialOrderOnTwoGenerators = chase PartialOrder TwoGenerators
+</pre><hr/><h3>instance FreePartialOrderOnTwoGenerators</h3><div><table id="table623" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Dom</b></caption><tr><th onclick="sortTable('table623', 0)">ID</th></tr><tr><td>0</td></tr><tr><td>1</td></tr></table><table id="table624" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Row</b></caption><tr><th onclick="sortTable('table624', 0)">ID</th><th onclick="sortTable('table624', 1)">p1</th><th onclick="sortTable('table624', 2)">p2</th></tr><tr><td>2</td><td>0</td><td>0</td></tr><tr><td>3</td><td>1</td><td>1</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance TwoGenerators</h3><div><table id="table625" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Dom</b></caption><tr><th onclick="sortTable('table625', 0)">ID</th></tr><tr><td>0</td></tr><tr><td>1</td></tr></table><table id="table626" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Row</b></caption><tr><th onclick="sortTable('table626', 0)">ID</th><th onclick="sortTable('table626', 1)">p1</th><th onclick="sortTable('table626', 2)">p2</th></tr></table></div><br style="clear:both;"/></body></html>

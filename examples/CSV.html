@@ -1,0 +1,56 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>CSV — CQL Example</title><style>body{font-family:sans-serif;margin:2em;line-height:1.4;color:#222}h1{border-bottom:1px solid #ccc;padding-bottom:.3em}pre{background:#f5f5f5;border:1px solid #ddd;padding:1em;overflow:auto;white-space:pre-wrap}table{border-collapse:collapse}a{color:#0645ad;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><p><a href="index.html">← All examples</a></p><h1>example CSV</h1><pre>
+options
+	always_reload = true
+
+typeside Sql = literal {
+	imports sql
+	external_functions
+		stringToInt : String -&gt; Integer =
+		 "x =&gt; { if (!x.isEmpty()) { return java.util.Optional.of(java.lang.Integer.parseInt(x.get())) } 
+		         else { return java.util.Optional.empty() } }"
+}
+
+schema S0 = literal : Sql {
+	entities
+		E
+	attributes
+		att : E -&gt; Integer
+}
+
+#  Person.csv is the file
+#   pId
+#   0
+#   1
+#   2
+#
+#   Employee.csv is the file
+#    eId,is
+#    10,0
+#    11,1
+#    12,2
+
+command createCsvData = exec_js {
+	"Java.type(\"catdata.Util\").writeFile(\"pId\\n0\\n1\\n2\", \"Person.csv\")"
+	"Java.type(\"catdata.Util\").writeFile(\"eId,is\\n10,0\\n11,1\\n12,2\", \"Employee.csv\")"
+}
+
+instance I0 = import_csv "." : Sql 
+
+mapping F = literal : S0 -&gt; schemaOf I0 {
+	entity
+		E -&gt; Employee
+	attributes
+		att -&gt; lambda e. stringToInt(e.is)
+}
+query Q = literal : schemaOf I0 -&gt; S0 {
+	entity 
+		E -&gt; {from e:Employee attributes att-&gt;stringToInt(e.is)}
+}
+
+instance I = delta F I0
+instance J = eval Q I0
+
+command exportCsvData = export_csv_instance I0 "exported"
+command exportCsvData2 = export_csv_transform (identity I0) "exported_trans.csv"
+</pre><hr/><h3>instance I</h3><div><table id="table484" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>E</b></caption><tr><th onclick="sortTable('table484', 0)">ID</th><th onclick="sortTable('table484', 1)">att</th></tr><tr><td>0</td><td>0</td></tr><tr><td>1</td><td>1</td></tr><tr><td>2</td><td>2</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance I0</h3><div><table id="table485" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Employee</b></caption><tr><th onclick="sortTable('table485', 0)">ID</th><th onclick="sortTable('table485', 1)">eId</th><th onclick="sortTable('table485', 2)">is</th></tr><tr><td>0</td><td>10</td><td>0</td></tr><tr><td>1</td><td>11</td><td>1</td></tr><tr><td>2</td><td>12</td><td>2</td></tr></table><table id="table486" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>Person</b></caption><tr><th onclick="sortTable('table486', 0)">ID</th><th onclick="sortTable('table486', 1)">pId</th></tr><tr><td>3</td><td>0</td></tr><tr><td>4</td><td>1</td></tr><tr><td>5</td><td>2</td></tr></table></div><br style="clear:both;"/><hr/><h3>instance J</h3><div><table id="table487" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>E</b></caption><tr><th onclick="sortTable('table487', 0)">ID</th><th onclick="sortTable('table487', 1)">att</th></tr><tr><td>0</td><td>0</td></tr><tr><td>1</td><td>1</td></tr><tr><td>2</td><td>2</td></tr></table></div><br style="clear:both;"/><hr/><h3>command createCsvData</h3><pre>Java.type("catdata.Util").writeFile("pId\n0\n1\n2", "Person.csv")
+Java.type("catdata.Util").writeFile("eId,is\n10,0\n11,1\n12,2", "Employee.csv")</pre><hr/><h3>command exportCsvData</h3><pre>Export to exported/.</pre><hr/><h3>command exportCsvData2</h3><pre>Exported to exported_trans.csv.</pre></body></html>

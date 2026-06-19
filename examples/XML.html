@@ -1,0 +1,13 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>XML — CQL Example</title><style>body{font-family:sans-serif;margin:2em;line-height:1.4;color:#222}h1{border-bottom:1px solid #ccc;padding-bottom:.3em}pre{background:#f5f5f5;border:1px solid #ddd;padding:1em;overflow:auto;white-space:pre-wrap}table{border-collapse:collapse}a{color:#0645ad;text-decoration:none}a:hover{text-decoration:underline}</style></head><body><p><a href="index.html">← All examples</a></p><h1>example XML</h1><pre>
+command createXmlData = exec_js {
+"Java.type(\"catdata.Util\").writeFile(\" &lt;data xmlns=\\\"http://example.org\\\"&gt;\\n    &lt;item&gt;\\n        &lt;name&gt;Hello&lt;/name&gt;\\n    &lt;/item&gt;\\n    &lt;item&gt;\\n        &lt;name&gt;Hello&lt;/name&gt;\\n    &lt;/item&gt;\\n&lt;/data&gt; \", \"tempX.xml\")" 
+}
+
+instance I = import_xml_all "tempX.xml"
+
+
+command exportXmlData = export_rdf_instance_xml I "fileO.xml" {
+	external_types
+		Integer -&gt; "http://www.w3.org/2001/XMLSchema#Integer" "x =&gt; x.toString()"
+}
+</pre><hr/><h3>instance I</h3><div><table id="table265" style="float: left; border: 1px solid black; padding: 5px; border-collapse: collapse; margin-right:10px" border="1"  cellpadding="3"><caption><b>R</b></caption><tr><th onclick="sortTable('table265', 0)">ID</th><th onclick="sortTable('table265', 1)">predicate</th><th onclick="sortTable('table265', 2)">subject</th><th onclick="sortTable('table265', 3)">object</th></tr><tr><td>0</td><td>cql://json#data</td><td>?0</td><td>?1</td></tr><tr><td>1</td><td>cql://json#item</td><td>?1</td><td>?2</td></tr><tr><td>2</td><td>cql://json#item</td><td>?1</td><td>?3</td></tr><tr><td>3</td><td>cql://json#xmlns</td><td>?1</td><td>http://example.org</td></tr><tr><td>4</td><td>cql://json#name</td><td>?3</td><td>Hello</td></tr><tr><td>5</td><td>cql://json#name</td><td>?2</td><td>Hello</td></tr></table></div><br style="clear:both;"/><hr/><h3>command createXmlData</h3><pre>Java.type("catdata.Util").writeFile(" &lt;data xmlns=\"http://example.org\"&gt;\n    &lt;item&gt;\n        &lt;name&gt;Hello&lt;/name&gt;\n    &lt;/item&gt;\n    &lt;item&gt;\n        &lt;name&gt;Hello&lt;/name&gt;\n    &lt;/item&gt;\n&lt;/data&gt; ", "tempX.xml")</pre><hr/><h3>command exportXmlData</h3><pre>Size 25</pre></body></html>
