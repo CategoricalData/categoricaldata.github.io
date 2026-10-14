@@ -4,7 +4,7 @@
 typeside t
 schema s : rdf
 ----------------------------------
-query (spanify s) : rdf -&gt; spanify s
+query (spanify s) : rdf : typesideOf s -&gt; spanify s
 	</pre>
 Given an OWL import and a relational olog encoded as a CQL schema, emit a query from the former to the latter.
 <br/><br/>Appears in:<br/><br/>
